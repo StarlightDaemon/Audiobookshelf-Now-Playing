@@ -178,8 +178,7 @@ else
 fi
 EOF
 chmod +x /usr/local/bin/abs-now-playing-update
-echo 'bash -c "$(curl -fsSL https://raw.githubusercontent.com/StarlightDaemon/audiobookshelf-now-playing/main/deploy/ct/audiobookshelf-now-playing.sh)" -- update' > /usr/bin/update
-chmod +x /usr/bin/update
+ln -sf /usr/local/bin/abs-now-playing-update /usr/bin/update
 msg_ok "Installed Update Script"
 
 motd_ssh
