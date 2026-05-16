@@ -193,7 +193,7 @@ while [[ -z "$ABS_HOST_VAL" ]]; do
     --title "ABS Server URL" \
     --ok-button "Next" \
     --inputbox "\nEnter the internal URL of your Audiobookshelf server.\nThis must be reachable from this Proxmox host.\n\nExample: http://192.168.1.100:13378" \
-    13 62 "http://192.168.1.100:13378" \
+    13 62 "" \
     3>&1 1>&2 2>&3) || msg_error "Installer cancelled."
   [[ -z "$ABS_HOST_VAL" ]] && whiptail --backtitle "$BACKTITLE" --title "Required" \
     --msgbox "\nABS server URL cannot be empty." 8 40
