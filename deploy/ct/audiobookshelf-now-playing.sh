@@ -165,42 +165,40 @@ fi
 
 CTID="$NEXT_ID"
 
-# ── ABS Credentials (optional) ────────────────────────────────────────────────
+# ── ABS Credentials (required) ────────────────────────────────────────────────
 ABS_HOST_VAL=""
 ABS_TOKEN_VAL=""
 
-if whiptail \
+whiptail \
   --backtitle "$BACKTITLE" \
-  --title "ABS Credentials" \
-  --ok-button "Configure Now" --cancel-button "Skip" \
-  --yesno "\nConfigure Audiobookshelf credentials now?\n\nYou will need:\n  • Your ABS server URL\n  • Your personal ABS API token\n\nSkip to continue — a demo card will be shown\nuntil credentials are configured." \
-  15 58; then
+  --title "ABS Credentials Required" \
+  --ok-button "Continue" \
+  --msgbox "\nAudiobookshelf credentials are required to continue.\n\nYou will need:\n  • Your ABS server URL\n  • Your personal ABS API token\n\nHow to find your API token:\n  1. Open your ABS instance in a browser\n  2. Click your username (top-right corner)\n  3. Select Edit Profile\n  4. Scroll down to the API Token section\n  5. Copy the token (long string starting with eyJ...)" \
+  19 62
 
+while [[ -z "$ABS_HOST_VAL" ]]; do
   ABS_HOST_VAL=$(whiptail \
     --backtitle "$BACKTITLE" \
     --title "ABS Server URL" \
-    --ok-button "Next" --cancel-button "Skip" \
+    --ok-button "Next" \
     --inputbox "\nEnter the internal URL of your Audiobookshelf server.\nThis must be reachable from this Proxmox host.\n\nExample: http://192.168.1.100:13378" \
     13 62 "http://192.168.1.100:13378" \
-    3>&1 1>&2 2>&3) || ABS_HOST_VAL=""
+    3>&1 1>&2 2>&3) || msg_error "Installer cancelled."
+  [[ -z "$ABS_HOST_VAL" ]] && whiptail --backtitle "$BACKTITLE" --title "Required" \
+    --msgbox "\nABS server URL cannot be empty." 8 40
+done
 
-  if [[ -n "$ABS_HOST_VAL" ]]; then
-    whiptail \
-      --backtitle "$BACKTITLE" \
-      --title "How to find your API Token" \
-      --ok-button "I have it — Next" \
-      --msgbox "\nHow to get your Audiobookshelf API token:\n\n  1. Open your ABS instance in a browser\n  2. Click your username (top-right corner)\n  3. Select Edit Profile\n  4. Scroll down to the API Token section\n  5. Copy the token shown there\n\nNote: use your own user token, not a shared one.\nThe token is a long string starting with eyJ..." \
-      18 62
-
-    ABS_TOKEN_VAL=$(whiptail \
-      --backtitle "$BACKTITLE" \
-      --title "ABS API Token" \
-      --ok-button "Done" --cancel-button "Skip" \
-      --passwordbox "\nPaste your ABS API token below.\nInput is hidden — paste works normally.\n" \
-      11 62 \
-      3>&1 1>&2 2>&3) || ABS_TOKEN_VAL=""
-  fi
-fi
+while [[ -z "$ABS_TOKEN_VAL" ]]; do
+  ABS_TOKEN_VAL=$(whiptail \
+    --backtitle "$BACKTITLE" \
+    --title "ABS API Token" \
+    --ok-button "Done" \
+    --passwordbox "\nPaste your ABS API token below.\nInput is hidden — paste works normally.\n" \
+    11 62 \
+    3>&1 1>&2 2>&3) || msg_error "Installer cancelled."
+  [[ -z "$ABS_TOKEN_VAL" ]] && whiptail --backtitle "$BACKTITLE" --title "Required" \
+    --msgbox "\nAPI token cannot be empty." 8 40
+done
 
 # ── Confirmation ──────────────────────────────────────────────────────────────
 show_header
@@ -208,8 +206,8 @@ whiptail \
   --backtitle "$BACKTITLE" \
   --title "Confirm — Create Container ${CTID}" \
   --ok-button "Create" --cancel-button "Abort" \
-  --yesno "\nThe following LXC container will be created:\n\n  CT ID   : ${CTID}\n  Hostname: ${NSAPP}\n  CPU     : ${var_cpu} core(s)\n  RAM     : ${var_ram} MB\n  Disk    : ${var_disk} GB\n  Bridge  : ${var_bridge}\n  OS      : Debian ${var_version} (unprivileged)\n  ABS creds: $([ -n "$ABS_TOKEN_VAL" ] && echo "provided" || echo "skip — demo mode")\n\nProceed?" \
-  21 58 || msg_error "Aborted by user."
+  --yesno "\nThe following LXC container will be created:\n\n  CT ID   : ${CTID}\n  Hostname: ${NSAPP}\n  CPU     : ${var_cpu} core(s)\n  RAM     : ${var_ram} MB\n  Disk    : ${var_disk} GB\n  Bridge  : ${var_bridge}\n  OS      : Debian ${var_version} (unprivileged)\n  ABS host : ${ABS_HOST_VAL}\n  ABS token: configured\n\nProceed?" \
+  22 62 || msg_error "Aborted by user."
 
 show_header
 
@@ -260,31 +258,22 @@ pct exec "$CTID" -- bash -c "$(curl -fsSL "$INSTALL_URL")"
 msg_ok "Install script complete"
 
 # ── Write credentials and start service ──────────────────────────────────────
-if [[ -n "$ABS_HOST_VAL" && -n "$ABS_TOKEN_VAL" ]]; then
-  msg_info "Writing ABS credentials"
-  pct exec "$CTID" -- sed -i \
-    -e "s|^ABS_HOST=.*|ABS_HOST=${ABS_HOST_VAL}|" \
-    -e "s|^ABS_TOKEN=.*|ABS_TOKEN=${ABS_TOKEN_VAL}|" \
-    /etc/audiobookshelf-now-playing.env
-  msg_ok "Credentials written"
-  msg_info "Starting service"
-  $STD pct exec "$CTID" -- systemctl start audiobookshelf-now-playing
-  msg_ok "Service started"
-else
-  msg_warn "No credentials provided — demo card active until configured"
-fi
+msg_info "Writing ABS credentials"
+pct exec "$CTID" -- sed -i \
+  -e "s|^ABS_HOST=.*|ABS_HOST=${ABS_HOST_VAL}|" \
+  -e "s|^ABS_TOKEN=.*|ABS_TOKEN=${ABS_TOKEN_VAL}|" \
+  /etc/audiobookshelf-now-playing.env
+msg_ok "Credentials written"
+
+msg_info "Starting service"
+$STD pct exec "$CTID" -- systemctl start audiobookshelf-now-playing
+msg_ok "Service started"
 
 # ── Final output ──────────────────────────────────────────────────────────────
 IP=$(pct exec "$CTID" -- hostname -I 2>/dev/null | awk '{print $1}')
 
-printf "\n${GN}${CM}${APP} setup complete!${CL}\n"
+printf "\n${GN}${CM}${APP} is live!${CL}\n"
 printf "\n${YW}${INFO}Access the card at:${CL}\n"
 printf "${TAB}${TAB}${BL}http://${IP}:8000/card${CL}\n"
-
-if [[ -z "$ABS_TOKEN_VAL" ]]; then
-  printf "\n${YW}${INFO}Set your ABS credentials when ready:${CL}\n"
-  printf "${TAB}${TAB}${YW}pct exec ${CTID} -- nano /etc/audiobookshelf-now-playing.env${CL}\n"
-  printf "\n${YW}${INFO}Then restart:${CL}\n"
-  printf "${TAB}${TAB}${YW}pct exec ${CTID} -- systemctl restart audiobookshelf-now-playing${CL}\n"
-fi
-printf "\n"
+printf "\n${YW}${INFO}To update in future:${CL}\n"
+printf "${TAB}${TAB}${YW}CTID=${CTID} bash <(curl -fsSL https://raw.githubusercontent.com/StarlightDaemon/audiobookshelf-now-playing/main/deploy/ct/audiobookshelf-now-playing.sh) update${CL}\n\n"
