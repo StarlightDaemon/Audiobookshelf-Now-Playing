@@ -108,9 +108,14 @@ printf '  ╚══════════════════════�
 printf "${CL}\n"
 printf "  ${BL}Card URL :${CL}  http://${IP}:8000/card\n"
 
+if ! systemctl is-active --quiet audiobookshelf-now-playing; then
+  printf "  ${RD}Service  :${CL}  not running  —  systemctl start audiobookshelf-now-playing\n"
+  printf "\n  ${BL}Commands :${CL}  update  —  pull latest code and restart\n\n"
+  return 0 2>/dev/null || exit 0
+fi
 STATUS=$(curl -sf --max-time 2 http://localhost:8000/status 2>/dev/null)
 if [ -z "$STATUS" ]; then
-  printf "  ${RD}Service  :${CL}  not running  —  systemctl start audiobookshelf-now-playing\n"
+  printf "  ${YW}Service  :${CL}  starting up...\n"
 else
   DEMO=$(printf '%s' "$STATUS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('demo_mode',False))" 2>/dev/null)
   PLAYING=$(printf '%s' "$STATUS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('playing',False))" 2>/dev/null)
