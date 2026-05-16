@@ -143,6 +143,7 @@ ExecStart=
 ExecStart=-/sbin/agetty --autologin root --noclear %I $TERM
 EOF
 systemctl daemon-reload
+systemctl restart getty@tty1
 msg_ok "Configured Console Auto-Login"
 
 msg_info "Installing Update Script"
