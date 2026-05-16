@@ -117,6 +117,7 @@ systemctl restart audiobookshelf-now-playing
 echo "  ✔  audiobookshelf-now-playing updated and restarted"
 EOF
 chmod +x /usr/local/bin/abs-now-playing-update
+ln -sf /usr/local/bin/abs-now-playing-update /usr/local/bin/update
 msg_ok "Installed Update Script"
 
 motd_ssh
