@@ -1,5 +1,9 @@
 # Audiobookshelf Now Playing
 
+[![Version](https://img.shields.io/badge/version-0.1.0-blue?style=flat-square)](CHANGELOG.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue?style=flat-square)](https://www.python.org/)
+
 A self-hosted, README-embeddable "Now Listening" widget for [Audiobookshelf](https://www.audiobookshelf.org/). Drop-in equivalent of the Spotify Now Playing badge, for your audiobook shelf.
 
 ```md
@@ -153,3 +157,15 @@ uvicorn app.main:app --reload
 - Audiobooks only — podcast sessions are filtered out
 - Single-user — one ABS token, one user's sessions
 - In-memory cache — restarts reset the cache; TTL defaults to 60 s
+
+---
+
+## Versioning
+
+This project uses [Semantic Versioning](https://semver.org/). See [CHANGELOG.md](CHANGELOG.md) for release history.
+
+---
+
+## License
+
+[MIT](LICENSE) © 2026 StarlightDaemon
