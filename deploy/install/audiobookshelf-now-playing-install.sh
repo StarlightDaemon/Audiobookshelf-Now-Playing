@@ -136,11 +136,11 @@ rm -f /etc/motd
 msg_ok "Installed Status MOTD"
 
 msg_info "Configuring Console Auto-Login"
-mkdir -p /etc/systemd/system/console-getty.service.d
-cat > /etc/systemd/system/console-getty.service.d/autologin.conf << 'EOF'
+mkdir -p /etc/systemd/system/getty@tty1.service.d
+cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << 'EOF'
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty --autologin root --noclear --keep-baud console 115200,38400,9600 $TERM
+ExecStart=-/sbin/agetty --autologin root --noclear %I $TERM
 EOF
 systemctl daemon-reload
 msg_ok "Configured Console Auto-Login"
