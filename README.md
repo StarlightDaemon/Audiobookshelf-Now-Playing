@@ -46,31 +46,27 @@ The service calls your ABS instance directly over the internal Proxmox network. 
 - A Cloudflare Tunnel already configured (add one new public hostname)
 - An ABS API token — generate one in **ABS → Settings → Users → (your user) → API Token**
 
-### 1. Create the LXC container
+### 1. Run the ct/ script on the Proxmox host
 
-In Proxmox, create a Debian or Ubuntu LTS container with minimal resources:
-
-| Setting | Value |
-|---|---|
-| CPU | 1 core |
-| RAM | 512 MB |
-| Disk | 4 GB |
-| Network | Static IP on the same bridge as your ABS instance |
-
-### 2. Run the install script inside the LXC
+This creates and configures the LXC container automatically (Debian 12, 1 core, 512 MB, 4 GB):
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/StarlightDaemon/audiobookshelf-now-playing/main/deploy/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/StarlightDaemon/audiobookshelf-now-playing/main/deploy/ct/audiobookshelf-now-playing.sh)
 ```
 
-Or clone and run manually:
+The script will:
+- Download a Debian 12 template if not already present
+- Create and start an unprivileged LXC container
+- Run the install script inside it (Python, venv, app, systemd service)
+- Print the container's IP and next steps
+
+Resource defaults can be overridden before running:
 
 ```bash
-git clone https://github.com/StarlightDaemon/audiobookshelf-now-playing /opt/audiobookshelf-now-playing
-bash /opt/audiobookshelf-now-playing/deploy/install.sh
+var_ram=1024 var_disk=8 bash <(curl -fsSL ...)
 ```
 
-### 3. Configure environment variables
+### 2. Configure environment variables
 
 Edit `/etc/audiobookshelf-now-playing.env` on the LXC:
 
