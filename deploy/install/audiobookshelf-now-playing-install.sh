@@ -19,7 +19,6 @@ else
   CL=$(printf '\033[m')
   CM="  ✔  "
   CROSS="  ✖  "
-  STD=""
 
   msg_info()  { printf "  ${BL}%-50s${CL}" "${1}..."; }
   msg_ok()    { printf " ${CM}${GN}%s${CL}\n" "${1}"; }
@@ -40,6 +39,14 @@ else
     apt-get clean        >/dev/null 2>&1
     rm -rf /var/lib/apt/lists/*
   }
+fi
+
+# ── Verbose / silent mode ─────────────────────────────────────────────────────
+silent() { "$@" >/dev/null 2>&1; }
+if [[ "${VERBOSE:-0}" == "1" ]]; then
+  STD=""
+else
+  STD="silent"
 fi
 
 color()      { :; }   # no-op — colours already set above or via FUNCTIONS_FILE_PATH

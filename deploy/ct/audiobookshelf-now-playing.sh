@@ -14,12 +14,23 @@ CM="  ✔  "
 CROSS="  ✖  "
 INFO="  ℹ  "
 TAB="  "
-STD=""
 
 msg_info()  { printf "  ${BL}%-50s${CL}" "${1}..."; }
 msg_ok()    { printf " ${CM}${GN}%s${CL}\n" "${1}"; }
 msg_error() { printf "\n ${CROSS}${RD}%s${CL}\n" "${1}" >&2; exit 1; }
 msg_warn()  { printf "\n  ${INFO}${YW}%s${CL}\n" "${1}"; }
+
+# ── Verbose / silent mode ─────────────────────────────────────────────────────
+# Pass --verbose as the first argument to see all subprocess output.
+silent() { "$@" >/dev/null 2>&1; }
+if [[ "${1:-}" == "--verbose" ]]; then
+  VERBOSE=1
+  STD=""
+  shift
+else
+  VERBOSE=0
+  STD="silent"
+fi
 
 # ── Banner ────────────────────────────────────────────────────────────────────
 show_header() {
@@ -254,7 +265,7 @@ msg_ok "Started LXC container ${CTID}"
 
 # ── Install ───────────────────────────────────────────────────────────────────
 msg_info "Running install script inside container"
-pct exec "$CTID" -- bash -c "$(curl -fsSL "$INSTALL_URL")"
+pct exec "$CTID" -- bash -c "VERBOSE=${VERBOSE} $(curl -fsSL "$INSTALL_URL")"
 msg_ok "Install script complete"
 
 # ── Write credentials and start service ──────────────────────────────────────
