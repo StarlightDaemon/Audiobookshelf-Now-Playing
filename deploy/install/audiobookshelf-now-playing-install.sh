@@ -96,51 +96,9 @@ $STD systemctl enable audiobookshelf-now-playing
 msg_ok "Configured Systemd Service"
 
 msg_info "Installing Status MOTD"
-cat > /etc/update-motd.d/99-abs-status << 'MOTD'
-#!/usr/bin/env bash
-IP=$(hostname -I 2>/dev/null | awk '{print $1}')
-BL='\033[36m'; GN='\033[32m'; YW='\033[33m'; RD='\033[01;31m'; CL='\033[m'
-
-printf "\n${BL}"
-printf '  +----------------------------------------------------------+\n'
-printf '  |          Audiobookshelf Now Playing                      |\n'
-printf '  +----------------------------------------------------------+\n'
-printf "${CL}\n"
-printf "  ${BL}Card URL :${CL}  http://${IP}:8000/card\n"
-
-if ! systemctl is-active --quiet audiobookshelf-now-playing; then
-  if systemctl is-enabled --quiet audiobookshelf-now-playing 2>/dev/null; then
-    printf "  ${YW}Service  :${CL}  starting up...\n"
-  else
-    printf "  ${RD}Service  :${CL}  not running  -  systemctl start audiobookshelf-now-playing\n"
-  fi
-  printf "\n  ${BL}Commands :${CL}  update  -  pull latest code and restart\n\n"
-  return 0 2>/dev/null || exit 0
-fi
-STATUS=$(curl -sf --max-time 2 http://localhost:8000/status 2>/dev/null)
-if [ -z "$STATUS" ]; then
-  printf "  ${YW}Service  :${CL}  starting up...\n"
-else
-  DEMO=$(printf '%s' "$STATUS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('demo_mode',False))" 2>/dev/null)
-  PLAYING=$(printf '%s' "$STATUS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('playing',False))" 2>/dev/null)
-  if [ "$DEMO" = "True" ]; then
-    printf "  ${YW}Status   :${CL}  Demo mode - configure ABS credentials\n"
-  elif [ "$PLAYING" = "True" ]; then
-    TITLE=$(printf '%s' "$STATUS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('title',''))" 2>/dev/null)
-    AUTHOR=$(printf '%s' "$STATUS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('author',''))" 2>/dev/null)
-    PCT=$(printf '%s' "$STATUS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('progress_pct',0))" 2>/dev/null)
-    printf "  ${GN}Now Playing:${CL}\n"
-    printf "    Title  : %s\n" "$TITLE"
-    printf "    Author : %s\n" "$AUTHOR"
-    printf "    Progress: %s%%\n" "$PCT"
-  else
-    printf "  ${YW}Status   :${CL}  Live - nothing currently playing\n"
-  fi
-fi
-
-printf "\n  ${BL}Commands :${CL}  update  -  pull latest code and restart\n\n"
-MOTD
-chmod +x /etc/update-motd.d/99-abs-status
+# Symlink into the repo so 'update' (git pull) keeps MOTD current.
+chmod +x "$APP_DIR/deploy/motd.sh"
+ln -sf "$APP_DIR/deploy/motd.sh" /etc/update-motd.d/99-abs-status
 rm -f /etc/motd
 msg_ok "Installed Status MOTD"
 
