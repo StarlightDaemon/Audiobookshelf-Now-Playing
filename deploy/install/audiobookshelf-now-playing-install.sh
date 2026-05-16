@@ -136,17 +136,24 @@ rm -f /etc/motd
 msg_ok "Installed Status MOTD"
 
 msg_info "Configuring Console Auto-Login"
-# Cover both getty targets — Proxmox uses tty1; lxc-console uses /dev/console
-for unit in getty@tty1.service console-getty.service; do
-  dir="/etc/systemd/system/${unit}.d"
-  mkdir -p "$dir"
-  cat > "${dir}/autologin.conf" << 'EOF'
+# getty@tty1 is a template service — %I expands to tty1
+mkdir -p /etc/systemd/system/getty@tty1.service.d
+cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << 'EOF'
 [Service]
 ExecStart=
 ExecStart=-/sbin/agetty --autologin root --noclear --keep-baud 115200,38400,9600 %I linux
 Type=idle
 EOF
-done
+# console-getty is NOT a template — device must be named explicitly
+mkdir -p /etc/systemd/system/console-getty.service.d
+cat > /etc/systemd/system/console-getty.service.d/autologin.conf << 'EOF'
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin root --noclear --keep-baud 115200,38400,9600 console linux
+Type=idle
+EOF
+# Remove root password — zero-friction fallback if auto-login ever fails
+passwd -d root
 systemctl daemon-reload
 systemctl restart getty@tty1 2>/dev/null || true
 systemctl restart console-getty 2>/dev/null || true
