@@ -62,11 +62,11 @@ $STD apt-get install -y python3 python3-venv git ca-certificates
 msg_ok "Installed Dependencies"
 
 msg_info "Creating Service User"
-useradd --system --shell /usr/sbin/nologin --home-dir "$APP_DIR" abs-card
+id abs-card &>/dev/null || useradd --system --shell /usr/sbin/nologin --home-dir "$APP_DIR" abs-card
 msg_ok "Created Service User"
 
 msg_info "Cloning Repository"
-$STD git clone https://github.com/StarlightDaemon/Audiobookshelf-Now-Playing "$APP_DIR"
+$STD git clone --depth 1 https://github.com/StarlightDaemon/Audiobookshelf-Now-Playing "$APP_DIR"
 msg_ok "Cloned Repository"
 
 msg_info "Installing Python Dependencies"
@@ -87,6 +87,20 @@ cp "$APP_DIR/deploy/audiobookshelf-now-playing.service" /etc/systemd/system/
 systemctl daemon-reload
 $STD systemctl enable audiobookshelf-now-playing
 msg_ok "Configured Systemd Service"
+
+msg_info "Installing Update Script"
+cat > /usr/local/bin/abs-now-playing-update << 'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+APP_DIR=/opt/audiobookshelf-now-playing
+git -C "$APP_DIR" fetch --depth 1 origin
+git -C "$APP_DIR" reset --hard origin/HEAD
+"$APP_DIR/venv/bin/pip" install -q -r "$APP_DIR/requirements.txt"
+systemctl restart audiobookshelf-now-playing
+echo "  ✔  audiobookshelf-now-playing updated and restarted"
+EOF
+chmod +x /usr/local/bin/abs-now-playing-update
+msg_ok "Installed Update Script"
 
 motd_ssh
 customize

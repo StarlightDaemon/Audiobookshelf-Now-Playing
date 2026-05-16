@@ -4,9 +4,7 @@
 # License: MIT | https://github.com/StarlightDaemon/audiobookshelf-now-playing/raw/main/LICENSE
 # Source: https://www.audiobookshelf.org/ | Github: https://github.com/StarlightDaemon/audiobookshelf-now-playing
 
-# ── Inline community-scripts style helpers ────────────────────────────────────
-# Avoids sourcing core.func so the script is self-contained and testable
-# without a network dependency on the Proxmox host.
+# ── Colour helpers ────────────────────────────────────────────────────────────
 YW=$(printf '\033[33m')
 GN=$(printf '\033[32m')
 RD=$(printf '\033[01;31m')
@@ -23,12 +21,20 @@ msg_ok()    { printf " ${CM}${GN}%s${CL}\n" "${1}"; }
 msg_error() { printf "\n ${CROSS}${RD}%s${CL}\n" "${1}" >&2; exit 1; }
 msg_warn()  { printf "\n  ${INFO}${YW}%s${CL}\n" "${1}"; }
 
-header_info() {
-  printf "\n${BL}  %s${CL}\n%s\n" "${1}" "$(printf '─%.0s' {1..60})"
+# ── Banner ────────────────────────────────────────────────────────────────────
+show_header() {
+  clear
+  printf "${BL}"
+  printf '  ╔══════════════════════════════════════════════════════════╗\n'
+  printf '  ║        Audiobookshelf Now Playing  —  LXC Installer      ║\n'
+  printf '  ╚══════════════════════════════════════════════════════════╝\n'
+  printf "${CL}\n"
 }
 
 APP="Audiobookshelf Now Playing"
 NSAPP="audiobookshelf-now-playing"
+
+# ── Defaults ──────────────────────────────────────────────────────────────────
 var_tags="${var_tags:-audiobookshelf;media}"
 var_cpu="${var_cpu:-1}"
 var_ram="${var_ram:-512}"
@@ -36,38 +42,139 @@ var_disk="${var_disk:-4}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-12}"
 var_unprivileged="${var_unprivileged:-1}"
+var_bridge="${var_bridge:-vmbr0}"
 
 INSTALL_URL="https://raw.githubusercontent.com/StarlightDaemon/audiobookshelf-now-playing/main/deploy/install/audiobookshelf-now-playing-install.sh"
 
-header_info "$APP"
+BACKTITLE="${APP} Installer"
+
+show_header
 
 # ── Preflight ─────────────────────────────────────────────────────────────────
 if ! command -v pct &>/dev/null; then
   msg_error "This script must be run on a Proxmox VE host."
 fi
 
-# ── Update helper (run inside existing container) ─────────────────────────────
+if ! command -v whiptail &>/dev/null; then
+  msg_error "whiptail is required. Install it with: apt-get install whiptail"
+fi
+
+# ── Update helper ─────────────────────────────────────────────────────────────
 function update_script() {
-  header_info "$APP"
+  show_header
   if [[ -z "${CTID:-}" ]]; then
     msg_error "CTID is not set. Run: CTID=<vmid> bash $(basename "$0") update"
   fi
-  msg_info "Updating ${APP}"
-  pct exec "$CTID" -- bash -c "
-    git -C /opt/audiobookshelf-now-playing pull --ff-only
-    /opt/audiobookshelf-now-playing/venv/bin/pip install -q \
-      -r /opt/audiobookshelf-now-playing/requirements.txt
-    systemctl restart audiobookshelf-now-playing
-  "
+  msg_info "Updating ${APP} in container ${CTID}"
+  pct exec "$CTID" -- abs-now-playing-update
   msg_ok "Updated ${APP}"
   exit
 }
 [[ "${1:-}" == "update" ]] && update_script
 
-# ── Container ID ──────────────────────────────────────────────────────────────
-CTID=$(pvesh get /cluster/nextid 2>/dev/null)
-msg_info "Using container ID ${CTID}"
-msg_ok "Container ID ${CTID}"
+# ── Resolve next available CT ID ──────────────────────────────────────────────
+NEXT_ID=$(pvesh get /cluster/nextid 2>/dev/null || echo "100")
+
+# ── Settings wizard ───────────────────────────────────────────────────────────
+function advanced_settings() {
+  local STEP=0 MAX_STEP=6
+
+  # Step 0: CT ID
+  while true; do
+    STEP=1
+    CT_ID=$(whiptail \
+      --backtitle "$BACKTITLE" \
+      --title "Container ID  [${STEP}/${MAX_STEP}]" \
+      --ok-button "Next" --cancel-button "Cancel" \
+      --inputbox "\nContainer ID for the new LXC:" 10 50 "$NEXT_ID" \
+      3>&1 1>&2 2>&3) || return 1
+    [[ "$CT_ID" =~ ^[0-9]+$ && "$CT_ID" -ge 100 ]] && break
+    whiptail --backtitle "$BACKTITLE" --title "Invalid ID" \
+      --msgbox "Container ID must be a number ≥ 100." 8 40
+  done
+
+  # Step 1: Hostname
+  STEP=2
+  CT_HOSTNAME=$(whiptail \
+    --backtitle "$BACKTITLE" \
+    --title "Hostname  [${STEP}/${MAX_STEP}]" \
+    --ok-button "Next" --cancel-button "Back" \
+    --inputbox "\nHostname for the container:" 10 50 "$NSAPP" \
+    3>&1 1>&2 2>&3) || { STEP=1; advanced_settings; return; }
+  CT_HOSTNAME="${CT_HOSTNAME:-$NSAPP}"
+
+  # Step 2: CPU cores
+  STEP=3
+  CPU=$(whiptail \
+    --backtitle "$BACKTITLE" \
+    --title "CPU Cores  [${STEP}/${MAX_STEP}]" \
+    --ok-button "Next" --cancel-button "Back" \
+    --inputbox "\nNumber of CPU cores (1–8):" 10 50 "$var_cpu" \
+    3>&1 1>&2 2>&3) || { advanced_settings; return; }
+  CPU="${CPU:-$var_cpu}"
+
+  # Step 3: RAM
+  STEP=4
+  RAM=$(whiptail \
+    --backtitle "$BACKTITLE" \
+    --title "RAM (MB)  [${STEP}/${MAX_STEP}]" \
+    --ok-button "Next" --cancel-button "Back" \
+    --inputbox "\nMemory in MB (minimum 256):" 10 50 "$var_ram" \
+    3>&1 1>&2 2>&3) || { advanced_settings; return; }
+  RAM="${RAM:-$var_ram}"
+
+  # Step 4: Disk
+  STEP=5
+  DISK=$(whiptail \
+    --backtitle "$BACKTITLE" \
+    --title "Disk Size (GB)  [${STEP}/${MAX_STEP}]" \
+    --ok-button "Next" --cancel-button "Back" \
+    --inputbox "\nRoot disk size in GB (minimum 2):" 10 50 "$var_disk" \
+    3>&1 1>&2 2>&3) || { advanced_settings; return; }
+  DISK="${DISK:-$var_disk}"
+
+  # Step 5: Bridge
+  STEP=6
+  BRIDGE=$(whiptail \
+    --backtitle "$BACKTITLE" \
+    --title "Network Bridge  [${STEP}/${MAX_STEP}]" \
+    --ok-button "Next" --cancel-button "Back" \
+    --inputbox "\nNetwork bridge (e.g. vmbr0):" 10 50 "$var_bridge" \
+    3>&1 1>&2 2>&3) || { advanced_settings; return; }
+  BRIDGE="${BRIDGE:-$var_bridge}"
+
+  # Apply choices to globals
+  NEXT_ID="$CT_ID"
+  NSAPP="$CT_HOSTNAME"
+  var_cpu="$CPU"
+  var_ram="$RAM"
+  var_disk="$DISK"
+  var_bridge="$BRIDGE"
+}
+
+# ── Default or advanced prompt ────────────────────────────────────────────────
+if whiptail \
+  --backtitle "$BACKTITLE" \
+  --title "Settings" \
+  --yesno "\nUse default settings?\n\n  CT ID   : ${NEXT_ID} (next available)\n  Hostname: ${NSAPP}\n  CPU     : ${var_cpu} core(s)\n  RAM     : ${var_ram} MB\n  Disk    : ${var_disk} GB\n  Bridge  : ${var_bridge}\n  OS      : Debian ${var_version} (unprivileged)" \
+  18 55; then
+  : # accept defaults
+else
+  advanced_settings || msg_error "Installer cancelled."
+fi
+
+CTID="$NEXT_ID"
+
+# ── Confirmation ──────────────────────────────────────────────────────────────
+show_header
+whiptail \
+  --backtitle "$BACKTITLE" \
+  --title "Confirm — Create Container ${CTID}" \
+  --ok-button "Create" --cancel-button "Abort" \
+  --yesno "\nThe following LXC container will be created:\n\n  CT ID   : ${CTID}\n  Hostname: ${NSAPP}\n  CPU     : ${var_cpu} core(s)\n  RAM     : ${var_ram} MB\n  Disk    : ${var_disk} GB\n  Bridge  : ${var_bridge}\n  OS      : Debian ${var_version} (unprivileged)\n\nProceed?" \
+  20 55 || msg_error "Aborted by user."
+
+show_header
 
 # ── Debian template ───────────────────────────────────────────────────────────
 TEMPLATE=$(pveam list local 2>/dev/null \
@@ -93,7 +200,7 @@ $STD pct create "$CTID" "$TEMPLATE" \
   --cores    "$var_cpu" \
   --memory   "$var_ram" \
   --rootfs   "local-lvm:${var_disk}" \
-  --net0     name=eth0,bridge=vmbr0,ip=dhcp \
+  --net0     "name=eth0,bridge=${var_bridge},ip=dhcp" \
   --tags     "$var_tags" \
   --unprivileged "$var_unprivileged" \
   --features keyctl=1,nesting=1 \
@@ -118,10 +225,10 @@ msg_ok "Install script complete"
 # ── Final output ──────────────────────────────────────────────────────────────
 IP=$(pct exec "$CTID" -- hostname -I 2>/dev/null | awk '{print $1}')
 
-printf "\n${GN}  ✔  ${APP} setup has been successfully initialized!${CL}\n"
-printf "\n${YW}  ℹ  Access it using the following URL:${CL}\n"
-printf "${TAB}${TAB}${BL}http://${IP}:8000${CL}\n"
-printf "\n${YW}  ℹ  Set ABS credentials before the service will return data:${CL}\n"
+printf "\n${GN}${CM}${APP} setup complete!${CL}\n"
+printf "\n${YW}${INFO}Access the card at:${CL}\n"
+printf "${TAB}${TAB}${BL}http://${IP}:8000/card${CL}\n"
+printf "\n${YW}${INFO}Set your ABS credentials:${CL}\n"
 printf "${TAB}${TAB}${YW}pct exec ${CTID} -- nano /etc/audiobookshelf-now-playing.env${CL}\n"
-printf "\n${YW}  ℹ  Then restart:${CL}\n"
+printf "\n${YW}${INFO}Then restart:${CL}\n"
 printf "${TAB}${TAB}${YW}pct exec ${CTID} -- systemctl restart audiobookshelf-now-playing${CL}\n\n"
