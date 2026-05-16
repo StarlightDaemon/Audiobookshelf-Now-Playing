@@ -78,23 +78,17 @@ function update_script() {
     pct exec "$CTID" -- bash -c "
       set -euo pipefail
       APP_DIR=${APP_DIR}
-      git -C \"\$APP_DIR\" fetch --depth 1 origin
-      git -C \"\$APP_DIR\" reset --hard origin/HEAD
-      \"\$APP_DIR/venv/bin/pip\" install -q -r \"\$APP_DIR/requirements.txt\"
-      cat > /usr/local/bin/abs-now-playing-update << 'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-APP_DIR=/opt/audiobookshelf-now-playing
-git -C \"\$APP_DIR\" fetch --depth 1 origin
-git -C \"\$APP_DIR\" reset --hard origin/HEAD
-\"\$APP_DIR/venv/bin/pip\" install -q -r \"\$APP_DIR/requirements.txt\"
-systemctl restart audiobookshelf-now-playing
-echo '  ✔  audiobookshelf-now-playing updated and restarted'
-EOF
-      chmod +x /usr/local/bin/abs-now-playing-update
-      ln -sf /usr/local/bin/abs-now-playing-update /usr/local/bin/update
-      systemctl restart audiobookshelf-now-playing
-    "
+      git config --global --add safe.directory \"\$APP_DIR\" 2>/dev/null || true
+      BEFORE=\$(git -C \"\$APP_DIR\" rev-parse HEAD)
+      git -C \"\$APP_DIR\" fetch --depth 1 origin -q
+      git -C \"\$APP_DIR\" reset --hard origin/HEAD -q
+      AFTER=\$(git -C \"\$APP_DIR\" rev-parse HEAD)
+      if [[ \"\$BEFORE\" != \"\$AFTER\" ]]; then
+        \"\$APP_DIR/venv/bin/pip\" install -q -r \"\$APP_DIR/requirements.txt\"
+        systemctl restart audiobookshelf-now-playing
+      fi
+      ln -sf /usr/local/bin/abs-now-playing-update /usr/local/bin/update 2>/dev/null || true
+    " 2>/dev/null
     msg_ok "Updated ${APP}"
   else
     # ── Running inside the container ─────────────────────────────────────────
