@@ -95,6 +95,16 @@ systemctl daemon-reload
 $STD systemctl enable audiobookshelf-now-playing
 msg_ok "Configured Systemd Service"
 
+msg_info "Configuring Console Auto-Login"
+mkdir -p /etc/systemd/system/console-getty.service.d
+cat > /etc/systemd/system/console-getty.service.d/autologin.conf << 'EOF'
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin root --noclear --keep-baud console 115200,38400,9600 $TERM
+EOF
+systemctl daemon-reload
+msg_ok "Configured Console Auto-Login"
+
 msg_info "Installing Update Script"
 cat > /usr/local/bin/abs-now-playing-update << 'EOF'
 #!/usr/bin/env bash
