@@ -4,9 +4,28 @@
 # License: MIT | https://github.com/StarlightDaemon/audiobookshelf-now-playing/raw/main/LICENSE
 # Source: https://www.audiobookshelf.org/ | Github: https://github.com/StarlightDaemon/audiobookshelf-now-playing
 
-# Styling and message helpers from community-scripts (read-only, no build.func —
-# their install URL is hardcoded to their repo and cannot be redirected).
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/core.func)
+# ── Inline community-scripts style helpers ────────────────────────────────────
+# Avoids sourcing core.func so the script is self-contained and testable
+# without a network dependency on the Proxmox host.
+YW=$(printf '\033[33m')
+GN=$(printf '\033[32m')
+RD=$(printf '\033[01;31m')
+BL=$(printf '\033[36m')
+CL=$(printf '\033[m')
+CM="  ✔  "
+CROSS="  ✖  "
+INFO="  ℹ  "
+TAB="  "
+STD=""
+
+msg_info()  { printf "  ${BL}%-50s${CL}" "${1}..."; }
+msg_ok()    { printf " ${CM}${GN}%s${CL}\n" "${1}"; }
+msg_error() { printf "\n ${CROSS}${RD}%s${CL}\n" "${1}" >&2; exit 1; }
+msg_warn()  { printf "\n  ${INFO}${YW}%s${CL}\n" "${1}"; }
+
+header_info() {
+  printf "\n${BL}  %s${CL}\n%s\n" "${1}" "$(printf '─%.0s' {1..60})"
+}
 
 APP="Audiobookshelf Now Playing"
 NSAPP="audiobookshelf-now-playing"
@@ -21,15 +40,17 @@ var_unprivileged="${var_unprivileged:-1}"
 INSTALL_URL="https://raw.githubusercontent.com/StarlightDaemon/audiobookshelf-now-playing/main/deploy/install/audiobookshelf-now-playing-install.sh"
 
 header_info "$APP"
-color
-catch_errors
+
+# ── Preflight ─────────────────────────────────────────────────────────────────
+if ! command -v pct &>/dev/null; then
+  msg_error "This script must be run on a Proxmox VE host."
+fi
 
 # ── Update helper (run inside existing container) ─────────────────────────────
 function update_script() {
-  header_info
+  header_info "$APP"
   if [[ -z "${CTID:-}" ]]; then
     msg_error "CTID is not set. Run: CTID=<vmid> bash $(basename "$0") update"
-    exit 1
   fi
   msg_info "Updating ${APP}"
   pct exec "$CTID" -- bash -c "
@@ -43,15 +64,10 @@ function update_script() {
 }
 [[ "${1:-}" == "update" ]] && update_script
 
-# ── Preflight ─────────────────────────────────────────────────────────────────
-if ! command -v pct &>/dev/null; then
-  msg_error "This script must be run on a Proxmox VE host."
-  exit 1
-fi
-
 # ── Container ID ──────────────────────────────────────────────────────────────
 CTID=$(pvesh get /cluster/nextid 2>/dev/null)
 msg_info "Using container ID ${CTID}"
+msg_ok "Container ID ${CTID}"
 
 # ── Debian template ───────────────────────────────────────────────────────────
 TEMPLATE=$(pveam list local 2>/dev/null \
@@ -64,7 +80,7 @@ if [[ -z "$TEMPLATE" ]]; then
   TEMPLATE_NAME=$(pveam available --section system 2>/dev/null \
     | awk -v ver="debian-${var_version}-standard" '$0 ~ ver {print $1}' \
     | sort -V | tail -n1)
-  [[ -z "$TEMPLATE_NAME" ]] && { msg_error "No Debian ${var_version} template available."; exit 1; }
+  [[ -z "$TEMPLATE_NAME" ]] && msg_error "No Debian ${var_version} template available."
   $STD pveam download local "$TEMPLATE_NAME"
   TEMPLATE="local:vztmpl/${TEMPLATE_NAME}"
   msg_ok "Downloaded Debian ${var_version} template"
@@ -74,21 +90,20 @@ fi
 msg_info "Creating LXC container ${CTID} (${var_cpu} core · ${var_ram}MB · ${var_disk}GB)"
 $STD pct create "$CTID" "$TEMPLATE" \
   --hostname "$NSAPP" \
-  --cores   "$var_cpu" \
-  --memory  "$var_ram" \
-  --rootfs  "local-lvm:${var_disk}" \
-  --net0    name=eth0,bridge=vmbr0,ip=dhcp \
-  --tags    "$var_tags" \
+  --cores    "$var_cpu" \
+  --memory   "$var_ram" \
+  --rootfs   "local-lvm:${var_disk}" \
+  --net0     name=eth0,bridge=vmbr0,ip=dhcp \
+  --tags     "$var_tags" \
   --unprivileged "$var_unprivileged" \
   --features keyctl=1,nesting=1 \
-  --onboot  1 \
-  --start   0
+  --onboot   1 \
+  --start    0
 msg_ok "Created LXC container ${CTID}"
 
 # ── Start ─────────────────────────────────────────────────────────────────────
 msg_info "Starting LXC container ${CTID}"
 $STD pct start "$CTID"
-# Wait for network to come up inside the container
 for i in $(seq 1 10); do
   sleep 2
   pct exec "$CTID" -- bash -c "ip route get 1.1.1.1" &>/dev/null && break
@@ -103,11 +118,10 @@ msg_ok "Install script complete"
 # ── Final output ──────────────────────────────────────────────────────────────
 IP=$(pct exec "$CTID" -- hostname -I 2>/dev/null | awk '{print $1}')
 
-msg_ok "Completed successfully!\n"
-echo -e "${CREATING}${GN}${APP} setup has been successfully initialized!${CL}"
-echo -e "${INFO}${YW} Access it using the following URL:${CL}"
-echo -e "${TAB}${GATEWAY}${BGN}http://${IP}:8000${CL}"
-echo -e "${INFO}${YW} Set ABS credentials before the service will return data:${CL}"
-echo -e "${TAB}${YW}pct exec ${CTID} -- nano /etc/audiobookshelf-now-playing.env${CL}"
-echo -e "${INFO}${YW} Then restart:${CL}"
-echo -e "${TAB}${YW}pct exec ${CTID} -- systemctl restart audiobookshelf-now-playing${CL}"
+printf "\n${GN}  ✔  ${APP} setup has been successfully initialized!${CL}\n"
+printf "\n${YW}  ℹ  Access it using the following URL:${CL}\n"
+printf "${TAB}${TAB}${BL}http://${IP}:8000${CL}\n"
+printf "\n${YW}  ℹ  Set ABS credentials before the service will return data:${CL}\n"
+printf "${TAB}${TAB}${YW}pct exec ${CTID} -- nano /etc/audiobookshelf-now-playing.env${CL}\n"
+printf "\n${YW}  ℹ  Then restart:${CL}\n"
+printf "${TAB}${TAB}${YW}pct exec ${CTID} -- systemctl restart audiobookshelf-now-playing${CL}\n\n"
