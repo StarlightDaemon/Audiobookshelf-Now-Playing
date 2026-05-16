@@ -61,27 +61,66 @@ BACKTITLE="${APP} Installer"
 
 show_header
 
-# ── Preflight ─────────────────────────────────────────────────────────────────
+# ── Update helper ─────────────────────────────────────────────────────────────
+# Can be called two ways:
+#   From Proxmox host : CTID=107 bash <(curl -fsSL .../ct/script.sh) update
+#   From inside the container : bash <(curl -fsSL .../ct/script.sh) update
+function update_script() {
+  show_header
+  APP_DIR=/opt/audiobookshelf-now-playing
+
+  if command -v pct &>/dev/null; then
+    # ── Running on Proxmox host ───────────────────────────────────────────────
+    if [[ -z "${CTID:-}" ]]; then
+      msg_error "CTID is not set. Run: CTID=<vmid> bash <(curl -fsSL ...) update"
+    fi
+    msg_info "Updating ${APP} in container ${CTID}"
+    pct exec "$CTID" -- bash -c "
+      set -euo pipefail
+      APP_DIR=${APP_DIR}
+      git -C \"\$APP_DIR\" fetch --depth 1 origin
+      git -C \"\$APP_DIR\" reset --hard origin/HEAD
+      \"\$APP_DIR/venv/bin/pip\" install -q -r \"\$APP_DIR/requirements.txt\"
+      cat > /usr/local/bin/abs-now-playing-update << 'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+APP_DIR=/opt/audiobookshelf-now-playing
+git -C \"\$APP_DIR\" fetch --depth 1 origin
+git -C \"\$APP_DIR\" reset --hard origin/HEAD
+\"\$APP_DIR/venv/bin/pip\" install -q -r \"\$APP_DIR/requirements.txt\"
+systemctl restart audiobookshelf-now-playing
+echo '  ✔  audiobookshelf-now-playing updated and restarted'
+EOF
+      chmod +x /usr/local/bin/abs-now-playing-update
+      ln -sf /usr/local/bin/abs-now-playing-update /usr/local/bin/update
+      systemctl restart audiobookshelf-now-playing
+    "
+    msg_ok "Updated ${APP}"
+  else
+    # ── Running inside the container ─────────────────────────────────────────
+    if [[ ! -d "$APP_DIR" ]]; then
+      msg_error "No installation found at ${APP_DIR}"
+    fi
+    msg_info "Updating ${APP}"
+    git -C "$APP_DIR" fetch --depth 1 origin
+    git -C "$APP_DIR" reset --hard origin/HEAD
+    "$APP_DIR/venv/bin/pip" install -q -r "$APP_DIR/requirements.txt"
+    ln -sf /usr/local/bin/abs-now-playing-update /usr/local/bin/update
+    systemctl restart audiobookshelf-now-playing
+    msg_ok "Updated ${APP}"
+  fi
+  exit
+}
+[[ "${1:-}" == "update" ]] && update_script
+
+# ── Preflight (install path only) ─────────────────────────────────────────────
 if ! command -v pct &>/dev/null; then
-  msg_error "This script must be run on a Proxmox VE host."
+  msg_error "This script must be run on a Proxmox VE host (or with 'update' argument inside a container)."
 fi
 
 if ! command -v whiptail &>/dev/null; then
   msg_error "whiptail is required. Install it with: apt-get install whiptail"
 fi
-
-# ── Update helper ─────────────────────────────────────────────────────────────
-function update_script() {
-  show_header
-  if [[ -z "${CTID:-}" ]]; then
-    msg_error "CTID is not set. Run: CTID=<vmid> bash $(basename "$0") update"
-  fi
-  msg_info "Updating ${APP} in container ${CTID}"
-  pct exec "$CTID" -- abs-now-playing-update
-  msg_ok "Updated ${APP}"
-  exit
-}
-[[ "${1:-}" == "update" ]] && update_script
 
 # ── Resolve next available CT ID ──────────────────────────────────────────────
 NEXT_ID=$(pvesh get /cluster/nextid 2>/dev/null || echo "100")
