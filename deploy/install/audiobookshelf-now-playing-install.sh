@@ -141,29 +141,16 @@ rm -f /etc/motd
 msg_ok "Installed Status MOTD"
 
 msg_info "Configuring Console Auto-Login"
-# Replace getty on tty1 with a direct root bash shell — no login prompt possible
-systemctl disable getty@tty1 2>/dev/null || true
-systemctl mask getty@tty1
-cat > /etc/systemd/system/tty1-shell.service << 'EOF'
-[Unit]
-Description=Root shell on tty1
-After=systemd-user-sessions.service
-
+# Proxmox LXC containers use container-getty@1, not getty@tty1
+GETTY_OVERRIDE="/etc/systemd/system/container-getty@1.service.d/override.conf"
+mkdir -p "$(dirname "$GETTY_OVERRIDE")"
+cat > "$GETTY_OVERRIDE" << 'EOF'
 [Service]
-ExecStart=/bin/bash -l
-StandardInput=tty
-StandardOutput=tty
-TTYPath=/dev/tty1
-TTYReset=yes
-TTYVHangup=yes
-Restart=always
-User=root
-
-[Install]
-WantedBy=multi-user.target
+ExecStart=
+ExecStart=-/sbin/agetty --autologin root --noclear --keep-baud tty%I 115200,38400,9600 $TERM
 EOF
-systemctl enable tty1-shell
-systemctl start tty1-shell
+systemctl daemon-reload
+systemctl restart container-getty@1 2>/dev/null || true
 msg_ok "Configured Console Auto-Login"
 
 msg_info "Installing Update Script"
@@ -187,7 +174,8 @@ else
 fi
 EOF
 chmod +x /usr/local/bin/abs-now-playing-update
-ln -sf /usr/local/bin/abs-now-playing-update /usr/local/bin/update
+echo 'bash -c "$(curl -fsSL https://raw.githubusercontent.com/StarlightDaemon/audiobookshelf-now-playing/main/deploy/ct/audiobookshelf-now-playing.sh)" -- update' > /usr/bin/update
+chmod +x /usr/bin/update
 msg_ok "Installed Update Script"
 
 motd_ssh
