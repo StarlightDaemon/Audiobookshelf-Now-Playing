@@ -171,12 +171,20 @@ cat > /usr/local/bin/abs-now-playing-update << 'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 APP_DIR=/opt/audiobookshelf-now-playing
+GN='\033[32m'; YW='\033[33m'; CL='\033[m'
 git config --global --add safe.directory "$APP_DIR"
+BEFORE=$(git -C "$APP_DIR" rev-parse HEAD)
 git -C "$APP_DIR" fetch --depth 1 origin
 git -C "$APP_DIR" reset --hard origin/HEAD
-"$APP_DIR/venv/bin/pip" install -q -r "$APP_DIR/requirements.txt"
-systemctl restart audiobookshelf-now-playing
-echo "  ✔  audiobookshelf-now-playing updated and restarted"
+AFTER=$(git -C "$APP_DIR" rev-parse HEAD)
+if [[ "$BEFORE" == "$AFTER" ]]; then
+  printf "${YW}  ✔  Already up to date — no changes pulled${CL}\n"
+else
+  printf "${GN}  ✔  Updated to $(git -C "$APP_DIR" log -1 --format='%h %s')${CL}\n"
+  "$APP_DIR/venv/bin/pip" install -q -r "$APP_DIR/requirements.txt"
+  systemctl restart audiobookshelf-now-playing
+  printf "${GN}  ✔  Service restarted${CL}\n"
+fi
 EOF
 chmod +x /usr/local/bin/abs-now-playing-update
 ln -sf /usr/local/bin/abs-now-playing-update /usr/local/bin/update

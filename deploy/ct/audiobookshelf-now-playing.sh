@@ -101,13 +101,21 @@ EOF
     if [[ ! -d "$APP_DIR" ]]; then
       msg_error "No installation found at ${APP_DIR}"
     fi
-    msg_info "Updating ${APP}"
+    git config --global --add safe.directory "$APP_DIR"
+    BEFORE=$(git -C "$APP_DIR" rev-parse HEAD)
+    msg_info "Checking for updates"
     git -C "$APP_DIR" fetch --depth 1 origin
     git -C "$APP_DIR" reset --hard origin/HEAD
-    "$APP_DIR/venv/bin/pip" install -q -r "$APP_DIR/requirements.txt"
-    ln -sf /usr/local/bin/abs-now-playing-update /usr/local/bin/update
-    systemctl restart audiobookshelf-now-playing
-    msg_ok "Updated ${APP}"
+    AFTER=$(git -C "$APP_DIR" rev-parse HEAD)
+    if [[ "$BEFORE" == "$AFTER" ]]; then
+      msg_ok "Already up to date — no changes pulled"
+    else
+      msg_ok "Updated to $(git -C "$APP_DIR" log -1 --format='%h %s')"
+      "$APP_DIR/venv/bin/pip" install -q -r "$APP_DIR/requirements.txt"
+      ln -sf /usr/local/bin/abs-now-playing-update /usr/local/bin/update
+      systemctl restart audiobookshelf-now-playing
+      msg_ok "Service restarted"
+    fi
   fi
   exit
 }
