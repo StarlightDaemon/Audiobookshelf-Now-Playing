@@ -4,6 +4,15 @@ from typing import Optional
 
 import httpx
 
+_PLACEHOLDER_TOKEN = "your-abs-api-token-here"
+
+
+def is_configured() -> bool:
+    """Return True only when real ABS credentials are present in the environment."""
+    token = os.environ.get("ABS_TOKEN", "")
+    host = os.environ.get("ABS_HOST", "")
+    return bool(token) and token != _PLACEHOLDER_TOKEN and bool(host)
+
 
 class AbsClient:
     def __init__(self) -> None:

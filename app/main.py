@@ -6,9 +6,9 @@ from typing import Optional
 from fastapi import FastAPI, Query
 from fastapi.responses import Response
 
-from .abs import AbsClient
+from .abs import AbsClient, is_configured
 from .cache import TTLCache
-from .render import CardData, render_card, render_error, render_nothing_playing
+from .render import CardData, render_card, render_demo, render_error, render_nothing_playing
 from .themes import DEFAULT_THEME, THEMES
 
 logger = logging.getLogger(__name__)
@@ -19,14 +19,22 @@ CACHE_TTL = int(os.environ.get("CACHE_TTL", "60"))
 _NOTHING = object()
 
 _cache: TTLCache
-_abs: AbsClient
+_abs: Optional[AbsClient]
+_configured: bool
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _cache, _abs
+    global _cache, _abs, _configured
+    _configured = is_configured()
     _cache = TTLCache(ttl=CACHE_TTL)
-    _abs = AbsClient()
+    _abs = AbsClient() if _configured else None
+    if not _configured:
+        logger.warning(
+            "ABS credentials not configured — serving demo card. "
+            "Set ABS_HOST and ABS_TOKEN in /etc/audiobookshelf-now-playing.env "
+            "then restart the service."
+        )
     yield
 
 
@@ -81,6 +89,14 @@ async def _fetch_card_data() -> Optional[CardData]:
 @app.get("/card")
 async def card_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
+
+    if not _configured:
+        return Response(
+            content=render_demo(t),
+            media_type="image/svg+xml",
+            headers={"Cache-Control": "no-store"},
+        )
+
     try:
         data = await _fetch_card_data()
         svg = render_nothing_playing(t) if data is None else render_card(t, data)
@@ -97,4 +113,4 @@ async def card_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {"status": "ok", "demo_mode": not _configured}

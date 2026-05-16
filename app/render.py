@@ -83,7 +83,16 @@ def _bg(theme: Theme) -> str:
     )
 
 
-def render_card(theme: Theme, data: CardData) -> str:
+_DEMO_DATA = CardData(
+    title="Project Hail Mary",
+    author="Andy Weir",
+    series=None,
+    progress=0.62,
+    cover_b64=None,
+)
+
+
+def render_card(theme: Theme, data: CardData, label: str = "Now Listening") -> str:
     has_series = bool(data.series)
 
     if has_series:
@@ -109,7 +118,7 @@ def render_card(theme: Theme, data: CardData) -> str:
         f'  {_bg(theme)}\n'
         f'  {_cover(data.cover_b64, theme)}\n'
         f'  <text x="{_TEXT_X}" y="{y_label}" font-family="{_FONT}"'
-        f' font-size="11" fill="{theme.text_secondary}">Now Listening</text>\n'
+        f' font-size="11" fill="{theme.text_secondary}">{_x(label)}</text>\n'
         f'  <text x="{_TEXT_X}" y="{y_title}" font-family="{_FONT}"'
         f' font-size="14" font-weight="600" fill="{theme.text_primary}">{title}</text>\n'
         f'  <text x="{_TEXT_X}" y="{y_author}" font-family="{_FONT}"'
@@ -118,6 +127,10 @@ def render_card(theme: Theme, data: CardData) -> str:
         f'  {_progress_bar(bar_top, data.progress, theme)}\n'
         f'</svg>'
     )
+
+
+def render_demo(theme: Theme) -> str:
+    return render_card(theme, _DEMO_DATA, label="Demo — configure credentials to go live")
 
 
 def render_nothing_playing(theme: Theme) -> str:
