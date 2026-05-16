@@ -131,3 +131,23 @@ async def card_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 @app.get("/health")
 async def health():
     return {"status": "ok", "demo_mode": not _configured}
+
+
+@app.get("/status")
+async def status():
+    if not _configured:
+        return {"playing": False, "demo_mode": True}
+    try:
+        data = await _fetch_card_data()
+        if data is None:
+            return {"playing": False, "demo_mode": False}
+        return {
+            "playing": True,
+            "demo_mode": False,
+            "title": data.title,
+            "author": data.author,
+            "series": data.series,
+            "progress_pct": round(data.progress * 100),
+        }
+    except Exception:
+        return {"playing": False, "error": True}
