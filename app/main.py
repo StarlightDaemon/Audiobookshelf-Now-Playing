@@ -57,7 +57,9 @@ async def _fetch_card_data() -> Optional[CardData]:
 
     meta = item.get("media", {}).get("metadata", {})
     title = meta.get("title") or "Unknown Title"
-    author = meta.get("authorName") or "Unknown Author"
+    author = meta.get("authorName") or ", ".join(
+        a["name"] for a in meta.get("authors", []) if a.get("name")
+    ) or "Unknown Author"
 
     series: Optional[str] = None
     for s in meta.get("series", []):
