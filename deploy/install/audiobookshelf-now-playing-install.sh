@@ -141,23 +141,29 @@ rm -f /etc/motd
 msg_ok "Installed Status MOTD"
 
 msg_info "Configuring Console Auto-Login"
-# Skip login entirely — hand tty straight to bash, no username/password prompt
-mkdir -p /etc/systemd/system/getty@tty1.service.d
-cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << 'EOF'
+# Replace getty on tty1 with a direct root bash shell — no login prompt possible
+systemctl disable getty@tty1 2>/dev/null || true
+systemctl mask getty@tty1
+cat > /etc/systemd/system/tty1-shell.service << 'EOF'
+[Unit]
+Description=Root shell on tty1
+After=systemd-user-sessions.service
+
 [Service]
-ExecStart=
-ExecStart=-/sbin/agetty --skip-login --login-program /bin/bash --noclear %I linux
+ExecStart=/bin/bash -l
+StandardInput=tty
+StandardOutput=tty
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
 EOF
-mkdir -p /etc/systemd/system/console-getty.service.d
-cat > /etc/systemd/system/console-getty.service.d/autologin.conf << 'EOF'
-[Service]
-ExecStart=
-ExecStart=-/sbin/agetty --skip-login --login-program /bin/bash --noclear console linux
-EOF
-passwd -d root
-systemctl daemon-reload
-systemctl restart getty@tty1 2>/dev/null || true
-systemctl restart console-getty 2>/dev/null || true
+systemctl enable tty1-shell
+systemctl start tty1-shell
 msg_ok "Configured Console Auto-Login"
 
 msg_info "Installing Update Script"
@@ -165,6 +171,7 @@ cat > /usr/local/bin/abs-now-playing-update << 'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 APP_DIR=/opt/audiobookshelf-now-playing
+git config --global --add safe.directory "$APP_DIR"
 git -C "$APP_DIR" fetch --depth 1 origin
 git -C "$APP_DIR" reset --hard origin/HEAD
 "$APP_DIR/venv/bin/pip" install -q -r "$APP_DIR/requirements.txt"
