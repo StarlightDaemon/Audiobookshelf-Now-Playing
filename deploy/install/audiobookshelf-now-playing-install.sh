@@ -112,9 +112,9 @@ if ! systemctl is-active --quiet audiobookshelf-now-playing; then
   if systemctl is-enabled --quiet audiobookshelf-now-playing 2>/dev/null; then
     printf "  ${YW}Service  :${CL}  starting up...\n"
   else
-    printf "  ${RD}Service  :${CL}  not running  —  systemctl start audiobookshelf-now-playing\n"
+    printf "  ${RD}Service  :${CL}  not running  -  systemctl start audiobookshelf-now-playing\n"
   fi
-  printf "\n  ${BL}Commands :${CL}  update  —  pull latest code and restart\n\n"
+  printf "\n  ${BL}Commands :${CL}  update  -  pull latest code and restart\n\n"
   return 0 2>/dev/null || exit 0
 fi
 STATUS=$(curl -sf --max-time 2 http://localhost:8000/status 2>/dev/null)
@@ -124,7 +124,7 @@ else
   DEMO=$(printf '%s' "$STATUS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('demo_mode',False))" 2>/dev/null)
   PLAYING=$(printf '%s' "$STATUS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('playing',False))" 2>/dev/null)
   if [ "$DEMO" = "True" ]; then
-    printf "  ${YW}Status   :${CL}  Demo mode — configure ABS credentials\n"
+    printf "  ${YW}Status   :${CL}  Demo mode - configure ABS credentials\n"
   elif [ "$PLAYING" = "True" ]; then
     TITLE=$(printf '%s' "$STATUS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('title',''))" 2>/dev/null)
     AUTHOR=$(printf '%s' "$STATUS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('author',''))" 2>/dev/null)
@@ -134,11 +134,11 @@ else
     printf "    Author : %s\n" "$AUTHOR"
     printf "    Progress: %s%%\n" "$PCT"
   else
-    printf "  ${YW}Status   :${CL}  Live — nothing currently playing\n"
+    printf "  ${YW}Status   :${CL}  Live - nothing currently playing\n"
   fi
 fi
 
-printf "\n  ${BL}Commands :${CL}  update  —  pull latest code and restart\n\n"
+printf "\n  ${BL}Commands :${CL}  update  -  pull latest code and restart\n\n"
 MOTD
 chmod +x /etc/update-motd.d/99-abs-status
 rm -f /etc/motd
@@ -169,12 +169,12 @@ git -C "$APP_DIR" fetch --depth 1 origin
 git -C "$APP_DIR" reset --hard origin/HEAD
 AFTER=$(git -C "$APP_DIR" rev-parse HEAD)
 if [[ "$BEFORE" == "$AFTER" ]]; then
-  printf "${YW}  ✔  Already up to date — no changes pulled${CL}\n"
+  printf "${YW}  [ok] Already up to date${CL}\n"
 else
-  printf "${GN}  ✔  Updated to $(git -C "$APP_DIR" log -1 --format='%h %s')${CL}\n"
+  printf "${GN}  [ok] Updated to $(git -C "$APP_DIR" log -1 --format='%h %s')${CL}\n"
   "$APP_DIR/venv/bin/pip" install -q -r "$APP_DIR/requirements.txt"
   systemctl restart audiobookshelf-now-playing
-  printf "${GN}  ✔  Service restarted${CL}\n"
+  printf "${GN}  [ok] Service restarted${CL}\n"
 fi
 EOF
 chmod +x /usr/local/bin/abs-now-playing-update
