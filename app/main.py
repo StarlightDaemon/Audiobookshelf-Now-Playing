@@ -13,21 +13,23 @@ from .themes import DEFAULT_THEME, THEMES
 
 logger = logging.getLogger(__name__)
 
-CACHE_TTL = int(os.environ.get("CACHE_TTL", "60"))
+# How often to poll ABS for the current session (detects book changes quickly)
+SESSION_TTL = int(os.environ.get("SESSION_TTL", "10"))
+# How long to cache metadata + cover art per book (expensive; only re-fetched on book change)
+CARD_TTL = int(os.environ.get("CARD_TTL", "300"))
 
-# Sentinel stored in cache when ABS confirms nothing is playing
-_NOTHING = object()
-
-_cache: TTLCache
+_session_cache: TTLCache   # short — current session info
+_card_cache: TTLCache      # long — metadata + cover keyed by item_id
 _abs: Optional[AbsClient]
 _configured: bool
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _cache, _abs, _configured
+    global _session_cache, _card_cache, _abs, _configured
     _configured = is_configured()
-    _cache = TTLCache(ttl=CACHE_TTL)
+    _session_cache = TTLCache(ttl=SESSION_TTL)
+    _card_cache = TTLCache(ttl=CARD_TTL)
     _abs = AbsClient() if _configured else None
     if not _configured:
         logger.warning(
@@ -42,50 +44,63 @@ app = FastAPI(title="Audiobookshelf Now Playing", lifespan=lifespan)
 
 
 async def _fetch_card_data() -> Optional[CardData]:
-    """Return CardData, or None when nothing is playing. Raises on ABS error."""
-    cached = _cache.get("card_data")
-    if cached is not None:
-        return None if cached is _NOTHING else cached
-
-    session = await _abs.get_current_session()
+    """
+    Two-tier fetch:
+    - Session (SESSION_TTL): lightweight poll — detects book changes fast.
+    - Card metadata (CARD_TTL, keyed by item_id): cover art + title/author/series.
+      Only re-fetched when the book changes or CARD_TTL expires.
+    Progress is always taken from the fresh session result.
+    """
+    # ── Session (short cache) ─────────────────────────────────────────────────
+    session = _session_cache.get("session")
     if session is None:
-        _cache.set("card_data", _NOTHING)
+        session = await _abs.get_current_session()
+        _session_cache.set("session", session if session is not None else False)
+    elif session is False:
+        session = None
+
+    if session is None:
         return None
 
-    item_id = session.get("libraryItemId", "")
-    item = await _abs.get_item(item_id)
-
-    meta = item.get("media", {}).get("metadata", {})
-    title = meta.get("title") or "Unknown Title"
-    author = meta.get("authorName") or ", ".join(
-        a["name"] for a in meta.get("authors", []) if a.get("name")
-    ) or "Unknown Author"
-
-    series: Optional[str] = None
-    for s in meta.get("series", []):
-        name = s.get("name", "")
-        seq = s.get("sequence", "")
-        series = f"{name} · Book {seq}" if seq else name
-        break
-
-    duration = session.get("duration") or 0
-    current_time = session.get("currentTime") or 0
+    item_id: str = session.get("libraryItemId", "")
+    duration: float = session.get("duration") or 0
+    current_time: float = session.get("currentTime") or 0
     progress = max(0.0, min(1.0, current_time / duration)) if duration > 0 else 0.0
 
-    try:
-        cover_b64 = await _abs.get_cover_b64(item_id)
-    except Exception:
-        cover_b64 = None
+    # ── Card metadata (long cache, keyed by item_id) ──────────────────────────
+    # A different item_id is a natural cache miss — no manual invalidation needed.
+    meta = _card_cache.get(item_id)
+    if meta is None:
+        item = await _abs.get_item(item_id)
+        item_meta = item.get("media", {}).get("metadata", {})
 
-    data = CardData(
-        title=title,
-        author=author,
-        series=series,
+        title = item_meta.get("title") or "Unknown Title"
+        author = item_meta.get("authorName") or ", ".join(
+            a["name"] for a in item_meta.get("authors", []) if a.get("name")
+        ) or "Unknown Author"
+
+        series: Optional[str] = None
+        for s in item_meta.get("series", []):
+            name = s.get("name", "")
+            seq = s.get("sequence", "")
+            series = f"{name} · Book {seq}" if seq else name
+            break
+
+        try:
+            cover_b64 = await _abs.get_cover_b64(item_id)
+        except Exception:
+            cover_b64 = None
+
+        meta = {"title": title, "author": author, "series": series, "cover_b64": cover_b64}
+        _card_cache.set(item_id, meta)
+
+    return CardData(
+        title=meta["title"],
+        author=meta["author"],
+        series=meta["series"],
         progress=progress,
-        cover_b64=cover_b64,
+        cover_b64=meta["cover_b64"],
     )
-    _cache.set("card_data", data)
-    return data
 
 
 @app.get("/card")
@@ -109,7 +124,7 @@ async def card_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     return Response(
         content=svg,
         media_type="image/svg+xml",
-        headers={"Cache-Control": f"public, max-age={CACHE_TTL}"},
+        headers={"Cache-Control": f"public, max-age={SESSION_TTL}"},
     )
 
 
