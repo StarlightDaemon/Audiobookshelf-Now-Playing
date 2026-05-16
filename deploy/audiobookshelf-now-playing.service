@@ -1,0 +1,23 @@
+[Unit]
+Description=Audiobookshelf Now Playing card service
+After=network.target
+
+[Service]
+Type=simple
+User=abs-card
+Group=abs-card
+WorkingDirectory=/opt/audiobookshelf-now-playing
+EnvironmentFile=/etc/audiobookshelf-now-playing.env
+ExecStart=/opt/audiobookshelf-now-playing/venv/bin/uvicorn app.main:app \
+    --host ${HOST} \
+    --port ${PORT}
+Restart=on-failure
+RestartSec=5
+# Harden the service — it only needs network and its own directory
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/audiobookshelf-now-playing
+
+[Install]
+WantedBy=multi-user.target
