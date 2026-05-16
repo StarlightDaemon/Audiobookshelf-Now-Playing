@@ -141,21 +141,19 @@ rm -f /etc/motd
 msg_ok "Installed Status MOTD"
 
 msg_info "Configuring Console Auto-Login"
-# getty@tty1 — Proxmox web console connects here
+# Skip login entirely — hand tty straight to bash, no username/password prompt
 mkdir -p /etc/systemd/system/getty@tty1.service.d
 cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << 'EOF'
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty --autologin root --noclear %I linux
+ExecStart=-/sbin/agetty --skip-login --login-program /bin/bash --noclear %I linux
 EOF
-# console-getty — lxc-console connects here (not a template, device named explicitly)
 mkdir -p /etc/systemd/system/console-getty.service.d
 cat > /etc/systemd/system/console-getty.service.d/autologin.conf << 'EOF'
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty --autologin root --noclear console linux
+ExecStart=-/sbin/agetty --skip-login --login-program /bin/bash --noclear console linux
 EOF
-# Remove root password — if the prompt ever shows, Enter is enough
 passwd -d root
 systemctl daemon-reload
 systemctl restart getty@tty1 2>/dev/null || true
