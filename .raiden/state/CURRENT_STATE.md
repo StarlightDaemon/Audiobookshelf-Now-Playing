@@ -2,13 +2,16 @@
 
 ## Status
 
-Initial implementation complete. All application code written, not yet deployed.
+v0.1.0 shipped. All application code written and pushed to GitHub. Tagged v0.1.0.
 
 ## What exists
 
 - `app/` — FastAPI application (main.py, abs.py, cache.py, render.py, themes.py)
-- `deploy/` — systemd unit file and LXC install script
-- `requirements.txt`, `.env.example`, `README.md`
+- `deploy/ct/` — Proxmox host LXC creation script (community-scripts style)
+- `deploy/install/` — container install script (community-scripts style)
+- `deploy/audiobookshelf-now-playing.service` — systemd unit
+- `requirements.txt`, `.env.example`, `README.md`, `LICENSE`, `VERSION`, `CHANGELOG.md`, `.gitignore`
+- Remote: https://github.com/StarlightDaemon/Audiobookshelf-Now-Playing
 
 ## Pending operator actions
 
