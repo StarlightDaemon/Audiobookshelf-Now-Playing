@@ -102,14 +102,18 @@ IP=$(hostname -I 2>/dev/null | awk '{print $1}')
 BL='\033[36m'; GN='\033[32m'; YW='\033[33m'; RD='\033[01;31m'; CL='\033[m'
 
 printf "\n${BL}"
-printf '  ╔══════════════════════════════════════════════════════════╗\n'
-printf '  ║          Audiobookshelf Now Playing                      ║\n'
-printf '  ╚══════════════════════════════════════════════════════════╝\n'
+printf '  +----------------------------------------------------------+\n'
+printf '  |          Audiobookshelf Now Playing                      |\n'
+printf '  +----------------------------------------------------------+\n'
 printf "${CL}\n"
 printf "  ${BL}Card URL :${CL}  http://${IP}:8000/card\n"
 
 if ! systemctl is-active --quiet audiobookshelf-now-playing; then
-  printf "  ${RD}Service  :${CL}  not running  —  systemctl start audiobookshelf-now-playing\n"
+  if systemctl is-enabled --quiet audiobookshelf-now-playing 2>/dev/null; then
+    printf "  ${YW}Service  :${CL}  starting up...\n"
+  else
+    printf "  ${RD}Service  :${CL}  not running  —  systemctl start audiobookshelf-now-playing\n"
+  fi
   printf "\n  ${BL}Commands :${CL}  update  —  pull latest code and restart\n\n"
   return 0 2>/dev/null || exit 0
 fi
