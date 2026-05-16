@@ -136,14 +136,20 @@ rm -f /etc/motd
 msg_ok "Installed Status MOTD"
 
 msg_info "Configuring Console Auto-Login"
-mkdir -p /etc/systemd/system/getty@tty1.service.d
-cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << 'EOF'
+# Cover both getty targets — Proxmox uses tty1; lxc-console uses /dev/console
+for unit in getty@tty1.service console-getty.service; do
+  dir="/etc/systemd/system/${unit}.d"
+  mkdir -p "$dir"
+  cat > "${dir}/autologin.conf" << 'EOF'
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty --autologin root --noclear %I $TERM
+ExecStart=-/sbin/agetty --autologin root --noclear --keep-baud 115200,38400,9600 %I linux
+Type=idle
 EOF
+done
 systemctl daemon-reload
-systemctl restart getty@tty1
+systemctl restart getty@tty1 2>/dev/null || true
+systemctl restart console-getty 2>/dev/null || true
 msg_ok "Configured Console Auto-Login"
 
 msg_info "Installing Update Script"
