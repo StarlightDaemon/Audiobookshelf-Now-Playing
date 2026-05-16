@@ -173,23 +173,31 @@ if whiptail \
   --backtitle "$BACKTITLE" \
   --title "ABS Credentials" \
   --ok-button "Configure Now" --cancel-button "Skip" \
-  --yesno "\nConfigure Audiobookshelf credentials now?\n\nYou will need:\n  • ABS server URL  (e.g. http://192.168.1.100:13378)\n  • ABS API token   (ABS → Settings → Users → API Token)\n\nYou can skip this and configure later — a demo\ncard will be shown until credentials are set." \
-  17 58; then
+  --yesno "\nConfigure Audiobookshelf credentials now?\n\nYou will need:\n  • Your ABS server URL\n  • Your personal ABS API token\n\nSkip to continue — a demo card will be shown\nuntil credentials are configured." \
+  15 58; then
 
   ABS_HOST_VAL=$(whiptail \
     --backtitle "$BACKTITLE" \
-    --title "ABS Host" \
+    --title "ABS Server URL" \
     --ok-button "Next" --cancel-button "Skip" \
-    --inputbox "\nAudiobookshelf server URL:" 10 58 "http://192.168.1.100:13378" \
+    --inputbox "\nEnter the internal URL of your Audiobookshelf server.\nThis must be reachable from this Proxmox host.\n\nExample: http://192.168.1.100:13378" \
+    13 62 "http://192.168.1.100:13378" \
     3>&1 1>&2 2>&3) || ABS_HOST_VAL=""
 
   if [[ -n "$ABS_HOST_VAL" ]]; then
+    whiptail \
+      --backtitle "$BACKTITLE" \
+      --title "How to find your API Token" \
+      --ok-button "I have it — Next" \
+      --msgbox "\nHow to get your Audiobookshelf API token:\n\n  1. Open your ABS instance in a browser\n  2. Click your username (top-right corner)\n  3. Select Edit Profile\n  4. Scroll down to the API Token section\n  5. Copy the token shown there\n\nNote: use your own user token, not a shared one.\nThe token is a long string starting with eyJ..." \
+      18 62
+
     ABS_TOKEN_VAL=$(whiptail \
       --backtitle "$BACKTITLE" \
       --title "ABS API Token" \
       --ok-button "Done" --cancel-button "Skip" \
-      --passwordbox "\nAPI token from ABS → Settings → Users → (your user):\n(input is hidden)" \
-      11 58 \
+      --passwordbox "\nPaste your ABS API token below.\nInput is hidden — paste works normally.\n" \
+      11 62 \
       3>&1 1>&2 2>&3) || ABS_TOKEN_VAL=""
   fi
 fi
