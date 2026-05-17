@@ -25,6 +25,20 @@ THEMES: dict[str, Theme] = {
         text_primary="#1f2328",
         text_secondary="#57606a",
     ),
+    "github-dark": Theme(
+        background="#0d1117",
+        border="#30363d",
+        accent="#58a6ff",
+        text_primary="#e6edf3",
+        text_secondary="#8b949e",
+    ),
+    "amoled": Theme(
+        background="#000000",
+        border="#1c1c1e",
+        accent="#0a84ff",
+        text_primary="#ffffff",
+        text_secondary="#8e8e93",
+    ),
 }
 
 DEFAULT_THEME = "dark"

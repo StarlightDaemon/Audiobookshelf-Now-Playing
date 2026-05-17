@@ -3,16 +3,23 @@ import os
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI, Query
-from fastapi.responses import Response
+from fastapi import FastAPI, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from .abs import AbsClient, is_configured
 from .cache import TTLCache
+from .config import AppConfig, load_config, save_config
 from .render import (
     CardData,
-    render_landscape, render_landscape_demo, render_landscape_error, render_landscape_nothing_playing,
+    render_landscape, render_landscape_demo, render_landscape_standalone_demo,
+    render_landscape_error, render_landscape_nothing_playing,
     render_portrait, render_portrait_demo, render_portrait_error, render_portrait_nothing_playing,
+    render_portrait_b, render_portrait_b_demo, render_portrait_b_nothing, render_portrait_b_error,
+    render_portrait_c, render_portrait_c_demo, render_portrait_c_nothing, render_portrait_c_error,
+    render_portrait_d, render_portrait_d_demo, render_portrait_d_nothing, render_portrait_d_error,
+    render_portrait_e, render_portrait_e_demo, render_portrait_e_nothing, render_portrait_e_error,
 )
+from .settings_ui import build_settings_page
 from .themes import DEFAULT_THEME, THEMES
 
 logger = logging.getLogger(__name__)
@@ -112,6 +119,10 @@ async def _fetch_card_data() -> Optional[CardData]:
         }
         _card_cache.set(item_id, meta)
 
+    ct  = session.get("currentTime") or 0
+    dur = session.get("duration") or 0
+    progress = ct / dur if dur > 0 else None
+
     return CardData(
         title=meta["title"],
         author=meta["author"],
@@ -120,22 +131,32 @@ async def _fetch_card_data() -> Optional[CardData]:
         narrator=meta["narrator"],
         publisher=meta["publisher"],
         year=meta["year"],
+        progress=progress,
     )
 
 
-async def _serve_card(render_fn, demo_fn, nothing_fn, error_fn, theme_key: str) -> Response:
+async def _serve_card(render_fn, demo_fn, nothing_fn, error_fn, theme_key: str,
+                      cache_max_age: Optional[int] = None,
+                      label: Optional[str] = None) -> Response:
     t = THEMES.get(theme_key, THEMES[DEFAULT_THEME])
     if not _configured:
-        return Response(content=demo_fn(t), media_type="image/svg+xml",
+        svg = demo_fn(t) if label is None else demo_fn(t, label=label)
+        return Response(content=svg, media_type="image/svg+xml",
                         headers={"Cache-Control": "no-store"})
     try:
         data = await _fetch_card_data()
-        svg = nothing_fn(t) if data is None else render_fn(t, data)
+        if data is None:
+            svg = nothing_fn(t)
+        elif label is not None:
+            svg = render_fn(t, data, label=label)
+        else:
+            svg = render_fn(t, data)
     except Exception:
         logger.exception("Failed to fetch card data from ABS")
         svg = error_fn(t)
+    max_age = cache_max_age if cache_max_age is not None else SESSION_TTL
     return Response(content=svg, media_type="image/svg+xml",
-                    headers={"Cache-Control": f"public, max-age={SESSION_TTL}"})
+                    headers={"Cache-Control": f"public, max-age={max_age}"})
 
 
 @app.get("/cardlandscape")
@@ -157,16 +178,87 @@ async def card_portrait_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 
 
 @app.get("/cardlandscapedemo")
-async def card_landscape_demo_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+async def card_landscape_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
+                                       label: Optional[str] = Query(default=None)):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_landscape_demo(t), media_type="image/svg+xml",
+    return Response(content=render_landscape_demo(t, label=label), media_type="image/svg+xml",
+                    headers={"Cache-Control": "no-store"})
+
+
+@app.get("/cardlandscapestandalonedemo")
+async def card_landscape_standalone_demo_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+    t = THEMES.get(theme, THEMES[DEFAULT_THEME])
+    return Response(content=render_landscape_standalone_demo(t), media_type="image/svg+xml",
+                    headers={"Cache-Control": "no-store"})
+
+
+# ── Portrait layout variants ──────────────────────────────────────────────────
+
+@app.get("/cardportraitb")
+async def card_portrait_b_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+    return await _serve_card(
+        render_portrait_b, render_portrait_b_demo,
+        render_portrait_b_nothing, render_portrait_b_error, theme,
+    )
+
+@app.get("/cardportraitbdemo")
+async def card_portrait_b_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
+                                        label: Optional[str] = Query(default=None)):
+    t = THEMES.get(theme, THEMES[DEFAULT_THEME])
+    return Response(content=render_portrait_b_demo(t, label=label), media_type="image/svg+xml",
+                    headers={"Cache-Control": "no-store"})
+
+
+@app.get("/cardportraitc")
+async def card_portrait_c_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+    return await _serve_card(
+        render_portrait_c, render_portrait_c_demo,
+        render_portrait_c_nothing, render_portrait_c_error, theme,
+    )
+
+@app.get("/cardportraitcdemo")
+async def card_portrait_c_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
+                                        label: Optional[str] = Query(default=None)):
+    t = THEMES.get(theme, THEMES[DEFAULT_THEME])
+    return Response(content=render_portrait_c_demo(t, label=label), media_type="image/svg+xml",
+                    headers={"Cache-Control": "no-store"})
+
+
+@app.get("/cardportraitd")
+async def card_portrait_d_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+    return await _serve_card(
+        render_portrait_d, render_portrait_d_demo,
+        render_portrait_d_nothing, render_portrait_d_error, theme,
+    )
+
+@app.get("/cardportraitddemo")
+async def card_portrait_d_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
+                                        label: Optional[str] = Query(default=None)):
+    t = THEMES.get(theme, THEMES[DEFAULT_THEME])
+    return Response(content=render_portrait_d_demo(t, label=label), media_type="image/svg+xml",
+                    headers={"Cache-Control": "no-store"})
+
+
+@app.get("/cardportraite")
+async def card_portrait_e_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+    return await _serve_card(
+        render_portrait_e, render_portrait_e_demo,
+        render_portrait_e_nothing, render_portrait_e_error, theme,
+    )
+
+@app.get("/cardportraitedemo")
+async def card_portrait_e_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
+                                        label: Optional[str] = Query(default=None)):
+    t = THEMES.get(theme, THEMES[DEFAULT_THEME])
+    return Response(content=render_portrait_e_demo(t, label=label), media_type="image/svg+xml",
                     headers={"Cache-Control": "no-store"})
 
 
 @app.get("/cardportraitdemo")
-async def card_portrait_demo_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+async def card_portrait_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
+                                      label: Optional[str] = Query(default=None)):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_demo(t), media_type="image/svg+xml",
+    return Response(content=render_portrait_demo(t, label=label), media_type="image/svg+xml",
                     headers={"Cache-Control": "no-store"})
 
 
@@ -192,3 +284,54 @@ async def status():
         }
     except Exception:
         return {"playing": False, "error": True}
+
+
+# ── Settings UI ───────────────────────────────────────────────────────────────
+
+_LAYOUT_MAP = {
+    "landscape":  (render_landscape,  render_landscape_demo,  render_landscape_nothing_playing, render_landscape_error),
+    "portrait":   (render_portrait,   render_portrait_demo,   render_portrait_nothing_playing,  render_portrait_error),
+    "portrait-b": (render_portrait_b, render_portrait_b_demo, render_portrait_b_nothing,        render_portrait_b_error),
+    "portrait-c": (render_portrait_c, render_portrait_c_demo, render_portrait_c_nothing,        render_portrait_c_error),
+    "portrait-d": (render_portrait_d, render_portrait_d_demo, render_portrait_d_nothing,        render_portrait_d_error),
+    "portrait-e": (render_portrait_e, render_portrait_e_demo, render_portrait_e_nothing,        render_portrait_e_error),
+}
+
+
+@app.get("/settings", response_class=HTMLResponse)
+async def settings_page(request: Request):
+    cfg = load_config()
+    base = str(request.base_url).rstrip("/")
+    return HTMLResponse(content=build_settings_page(cfg, base_url=base))
+
+
+@app.get("/api/config")
+async def get_config():
+    cfg = load_config()
+    return {"layout": cfg.layout, "theme": cfg.theme, "label": cfg.label}
+
+
+@app.post("/api/config")
+async def post_config(request: Request):
+    body = await request.json()
+    layout = body.get("layout", "landscape")
+    theme = body.get("theme", "dark")
+    label = body.get("label", "Currently Reading")
+    from .config import VALID_LAYOUTS, VALID_THEMES
+    if layout not in VALID_LAYOUTS:
+        return JSONResponse({"error": f"Unknown layout: {layout}"}, status_code=400)
+    if theme not in VALID_THEMES:
+        return JSONResponse({"error": f"Unknown theme: {theme}"}, status_code=400)
+    if not isinstance(label, str) or not label.strip():
+        label = "Currently Reading"
+    cfg = AppConfig(layout=layout, theme=theme, label=label.strip())
+    save_config(cfg)
+    return {"layout": cfg.layout, "theme": cfg.theme, "label": cfg.label, "saved": True}
+
+
+@app.get("/card")
+async def card_default():
+    """Primary embed endpoint — layout, theme, and label come from saved config."""
+    cfg = load_config()
+    fns = _LAYOUT_MAP[cfg.layout]
+    return await _serve_card(*fns, cfg.theme, cache_max_age=30, label=cfg.label)
