@@ -17,7 +17,6 @@ from .render import (
     render_landscape_editorial, render_landscape_editorial_demo, render_landscape_editorial_nothing, render_landscape_editorial_error,
     render_portrait_cover, render_portrait_cover_demo, render_portrait_cover_error, render_portrait_cover_nothing,
     render_portrait_frosted, render_portrait_frosted_demo, render_portrait_frosted_nothing, render_portrait_frosted_error,
-    render_portrait_stripe, render_portrait_stripe_demo, render_portrait_stripe_nothing, render_portrait_stripe_error,
     render_portrait_typeset, render_portrait_typeset_demo, render_portrait_typeset_nothing, render_portrait_typeset_error,
     render_portrait_bookmark, render_portrait_bookmark_demo, render_portrait_bookmark_nothing, render_portrait_bookmark_error,
     render_portrait_dogear, render_portrait_dogear_demo, render_portrait_dogear_nothing, render_portrait_dogear_error,
@@ -251,21 +250,6 @@ async def card_portrait_c_demo_endpoint(theme: str = Query(default=DEFAULT_THEME
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
-@app.get("/cardportraitd")
-async def card_portrait_d_endpoint(theme: str = Query(default=DEFAULT_THEME)):
-    return await _serve_card(
-        render_portrait_stripe, render_portrait_stripe_demo,
-        render_portrait_stripe_nothing, render_portrait_stripe_error, theme,
-    )
-
-@app.get("/cardportraitddemo")
-async def card_portrait_d_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
-                                        label: Optional[str] = Query(default=None),
-                                        corners: str = Query(default="rounded")):
-    t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_stripe_demo(t, label=label, corners=corners),
-                    media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
-
 
 @app.get("/cardportraite")
 async def card_portrait_e_endpoint(theme: str = Query(default=DEFAULT_THEME)):
@@ -356,7 +340,6 @@ _LAYOUT_MAP = {
     "landscape-editorial": (render_landscape_editorial, render_landscape_editorial_demo, render_landscape_editorial_nothing, render_landscape_editorial_error),
     "portrait-cover":      (render_portrait_cover,      render_portrait_cover_demo,      render_portrait_cover_nothing,      render_portrait_cover_error),
     "portrait-frosted":    (render_portrait_frosted,    render_portrait_frosted_demo,    render_portrait_frosted_nothing,    render_portrait_frosted_error),
-    "portrait-stripe":     (render_portrait_stripe,     render_portrait_stripe_demo,     render_portrait_stripe_nothing,     render_portrait_stripe_error),
     "portrait-typeset":    (render_portrait_typeset,    render_portrait_typeset_demo,    render_portrait_typeset_nothing,    render_portrait_typeset_error),
     "portrait-bookmark":   (render_portrait_bookmark,   render_portrait_bookmark_demo,   render_portrait_bookmark_nothing,   render_portrait_bookmark_error),
     "portrait-dogear":     (render_portrait_dogear,     render_portrait_dogear_demo,     render_portrait_dogear_nothing,     render_portrait_dogear_error),
