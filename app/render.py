@@ -88,7 +88,7 @@ def _cover(
 _DEMO_DATA = CardData(
     title="Project Hail Mary",
     author="Andy Weir",
-    series=None,
+    series="The Weir Trilogy · Book 2",
     cover_b64=None,
     narrator="Ray Porter",
     publisher="Ballantine Books",

@@ -156,6 +156,20 @@ async def card_portrait_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     )
 
 
+@app.get("/card/demo")
+async def card_landscape_demo_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+    t = THEMES.get(theme, THEMES[DEFAULT_THEME])
+    return Response(content=render_landscape_demo(t), media_type="image/svg+xml",
+                    headers={"Cache-Control": "no-store"})
+
+
+@app.get("/card/portrait/demo")
+async def card_portrait_demo_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+    t = THEMES.get(theme, THEMES[DEFAULT_THEME])
+    return Response(content=render_portrait_demo(t), media_type="image/svg+xml",
+                    headers={"Cache-Control": "no-store"})
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "demo_mode": not _configured}
