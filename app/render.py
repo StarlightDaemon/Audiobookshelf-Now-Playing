@@ -119,33 +119,22 @@ _LS_META_X = 372
 
 
 def render_landscape(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
-    # Primary zone — cluster text, adjust y positions based on narrator presence
-    if data.narrator:
-        y_label, y_title, y_author, y_narrator = 30, 52, 71, 88
-    else:
-        y_label, y_title, y_author = 38, 60, 79
-        y_narrator = 0
+    # Primary zone — 3 lines only (label, title, author), spread evenly in cover height
+    y_label, y_title, y_author = 30, 62, 88
 
     title  = _x(_trunc(data.title, 26))
     author = _x(_trunc(data.author, 28))
 
-    narrator_el = ""
-    if data.narrator:
-        narrator_el = (
-            f'  <text x="{_LS_PRIMARY_X}" y="{y_narrator}" font-family="{_FONT}"'
-            f' font-size="11" fill="{theme.text_secondary}">'
-            f'Narrated by {_x(_trunc(data.narrator, 22))}</text>\n'
-        )
-
-    # Metadata zone — publisher·year on one line, series on another
+    # Metadata zone — narrator first, then publisher·year, then series
     meta_lines = []
+    if data.narrator:
+        meta_lines.append(_x(_trunc(f'Narrated by {data.narrator}', 28)))
     pubyr_parts = [p for p in [data.publisher, data.year] if p]
     if pubyr_parts:
         meta_lines.append(_x(_trunc(" · ".join(pubyr_parts), 28)))
     if data.series:
         meta_lines.append(_x(_trunc(data.series, 28)))
 
-    # Align meta to the primary text top so columns feel connected
     meta_line_h = 22
     meta_start  = y_label
     meta_els = "".join(
@@ -171,7 +160,6 @@ def render_landscape(theme: Theme, data: CardData, label: str = "Currently Readi
         f' font-size="14" font-weight="600" fill="{theme.text_primary}">{title}</text>\n'
         f'  <text x="{_LS_PRIMARY_X}" y="{y_author}" font-family="{_FONT}"'
         f' font-size="12" fill="{theme.text_secondary}">{author}</text>\n'
-        f'{narrator_el}'
         f'{sep}'
         f'{meta_els}'
         f'</svg>'
