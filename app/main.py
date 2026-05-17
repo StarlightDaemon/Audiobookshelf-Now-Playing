@@ -361,7 +361,7 @@ async def get_config():
 async def post_config(request: Request):
     body = await request.json()
     layout = body.get("layout", "landscape")
-    theme = body.get("theme", "dark")
+    theme = body.get("theme", "github-dark")
     label = body.get("label", "Currently Reading")
     corners = body.get("corners", "rounded")
     from .config import VALID_LAYOUTS, VALID_THEMES, VALID_CORNERS

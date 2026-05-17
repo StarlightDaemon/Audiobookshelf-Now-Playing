@@ -11,13 +11,6 @@ class Theme:
 
 
 THEMES: dict[str, Theme] = {
-    "dark": Theme(
-        background="#1e2229",
-        border="#2e3340",
-        accent="#4d8ef0",
-        text_primary="#cdd5e0",
-        text_secondary="#6b7585",
-    ),
     "light": Theme(
         background="#f6f8fa",
         border="#d0d7de",
@@ -31,13 +24,6 @@ THEMES: dict[str, Theme] = {
         accent="#58a6ff",
         text_primary="#e6edf3",
         text_secondary="#8b949e",
-    ),
-    "amoled": Theme(
-        background="#000000",
-        border="#1c1c1e",
-        accent="#0a84ff",
-        text_primary="#ffffff",
-        text_secondary="#8e8e93",
     ),
     "parchment": Theme(
         background="#f5edd8",
@@ -55,4 +41,4 @@ THEMES: dict[str, Theme] = {
     ),
 }
 
-DEFAULT_THEME = "dark"
+DEFAULT_THEME = "github-dark"

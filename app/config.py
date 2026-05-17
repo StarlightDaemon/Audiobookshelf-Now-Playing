@@ -15,14 +15,14 @@ VALID_LAYOUTS = {
     "portrait-c", "portrait-d", "portrait-e",
     "portrait-f", "portrait-g",
 }
-VALID_THEMES = {"dark", "light", "github-dark", "amoled", "parchment", "kraft"}
+VALID_THEMES = {"light", "github-dark", "parchment", "kraft"}
 VALID_CORNERS = {"rounded", "square"}
 
 
 @dataclass
 class AppConfig:
     layout: str = "landscape"
-    theme: str = "dark"
+    theme: str = "github-dark"
     label: str = "Currently Reading"
     corners: str = "rounded"
 
@@ -32,13 +32,13 @@ def load_config() -> AppConfig:
         with open(_CONFIG_PATH) as f:
             data = json.load(f)
         layout = data.get("layout", "landscape")
-        theme = data.get("theme", "dark")
+        theme = data.get("theme", "github-dark")
         label = data.get("label", "Currently Reading")
         corners = data.get("corners", "rounded")
         if layout not in VALID_LAYOUTS:
             layout = "landscape"
         if theme not in VALID_THEMES:
-            theme = "dark"
+            theme = "github-dark"
         if not isinstance(label, str) or not label.strip():
             label = "Currently Reading"
         if corners not in VALID_CORNERS:

@@ -13,10 +13,8 @@ _LAYOUTS = [
 ]
 
 _THEMES = [
-    ("dark",        "Dark"),
     ("light",       "Light"),
     ("github-dark", "GitHub Dark"),
-    ("amoled",      "AMOLED"),
     ("parchment",   "Parchment"),
     ("kraft",       "Kraft"),
 ]
