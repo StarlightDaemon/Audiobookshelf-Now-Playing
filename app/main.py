@@ -138,7 +138,7 @@ async def _serve_card(render_fn, demo_fn, nothing_fn, error_fn, theme_key: str) 
                     headers={"Cache-Control": f"public, max-age={SESSION_TTL}"})
 
 
-@app.get("/card")
+@app.get("/cardlandscape")
 async def card_landscape_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     return await _serve_card(
         render_landscape, render_landscape_demo,
@@ -147,7 +147,7 @@ async def card_landscape_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     )
 
 
-@app.get("/card/portrait")
+@app.get("/cardportrait")
 async def card_portrait_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     return await _serve_card(
         render_portrait, render_portrait_demo,
@@ -156,14 +156,14 @@ async def card_portrait_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     )
 
 
-@app.get("/card/demo")
+@app.get("/cardlandscapedemo")
 async def card_landscape_demo_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
     return Response(content=render_landscape_demo(t), media_type="image/svg+xml",
                     headers={"Cache-Control": "no-store"})
 
 
-@app.get("/card/portrait/demo")
+@app.get("/cardportraitdemo")
 async def card_portrait_demo_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
     return Response(content=render_portrait_demo(t), media_type="image/svg+xml",

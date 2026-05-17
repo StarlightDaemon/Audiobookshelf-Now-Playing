@@ -119,8 +119,8 @@ _LS_META_X = 372
 
 
 def render_landscape(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
-    # Primary zone — 3 lines only (label, title, author), spread evenly in cover height
-    y_label, y_title, y_author = 30, 62, 88
+    # Primary zone — evenly distributed across full card height (content area y=20..140)
+    y_label, y_title, y_author = 50, 80, 110
 
     title  = _x(_trunc(data.title, 26))
     author = _x(_trunc(data.author, 28))
@@ -135,8 +135,9 @@ def render_landscape(theme: Theme, data: CardData, label: str = "Currently Readi
     if data.series:
         meta_lines.append(_x(_trunc(data.series, 28)))
 
-    meta_line_h = 22
-    meta_start  = y_label
+    meta_line_h = 30
+    # Vertically center the meta block around the card midpoint (y=80)
+    meta_start  = 80 - ((len(meta_lines) - 1) * meta_line_h) // 2
     meta_els = "".join(
         f'  <text x="{_LS_META_X}" y="{meta_start + i * meta_line_h}"'
         f' font-family="{_FONT}" font-size="11" fill="{theme.text_secondary}">'

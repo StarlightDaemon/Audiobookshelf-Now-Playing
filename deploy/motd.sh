@@ -36,13 +36,11 @@ else
   elif [ "$PLAYING" = "True" ]; then
     TITLE=$(printf '%s' "$STATUS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('title',''))" 2>/dev/null)
     AUTHOR=$(printf '%s' "$STATUS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('author',''))" 2>/dev/null)
-    PCT=$(printf '%s' "$STATUS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('progress_pct',0))" 2>/dev/null)
-    printf "  ${GN}Now Playing:${CL}\n"
-    printf "    Title    : %s\n" "$TITLE"
-    printf "    Author   : %s\n" "$AUTHOR"
-    printf "    Progress : %s%%\n" "$PCT"
+    printf "  ${GN}Currently Reading:${CL}\n"
+    printf "    Title  : %s\n" "$TITLE"
+    printf "    Author : %s\n" "$AUTHOR"
   else
-    printf "  ${YW}Status   : Live - nothing currently playing${CL}\n"
+    printf "  ${YW}Status   : Live - no listening history yet${CL}\n"
   fi
 fi
 

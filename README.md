@@ -7,11 +7,11 @@
 A self-hosted, README-embeddable "Now Listening" widget for [Audiobookshelf](https://www.audiobookshelf.org/). Drop-in equivalent of the Spotify Now Playing badge, for your audiobook shelf.
 
 ```md
-![Now Listening](https://card.starlightdaemon.dev/card)
+![Now Listening](https://card.starlightdaemon.dev/cardlandscape)
 ```
 
 ```md
-![Now Listening](https://card.starlightdaemon.dev/card?theme=light)
+![Now Listening](https://card.starlightdaemon.dev/cardlandscape?theme=light)
 ```
 
 ---
@@ -100,7 +100,7 @@ Add a new public hostname in your Cloudflare Tunnel configuration:
 ### 5. Embed in your README
 
 ```md
-![Now Listening](https://card.starlightdaemon.dev/card)
+![Now Listening](https://card.starlightdaemon.dev/cardlandscape)
 ```
 
 ---
@@ -121,8 +121,12 @@ Add a new public hostname in your Cloudflare Tunnel configuration:
 
 | Endpoint | Description |
 |---|---|
-| `GET /card` | SVG card — add `?theme=light` for light theme |
+| `GET /cardlandscape` | Landscape SVG card (600×160) — add `?theme=light` for light theme |
+| `GET /cardportrait` | Portrait SVG card (240×360) — add `?theme=light` for light theme |
+| `GET /cardlandscapedemo` | Landscape card with sample data (ignores ABS) |
+| `GET /cardportraitdemo` | Portrait card with sample data (ignores ABS) |
 | `GET /health` | Health check — returns `{"status": "ok"}` |
+| `GET /status` | JSON playing status |
 
 ---
 
@@ -137,7 +141,7 @@ export ABS_HOST=http://192.168.1.100:13378
 export ABS_TOKEN=your-token
 
 uvicorn app.main:app --reload
-# → http://localhost:8000/card
+# → http://localhost:8000/cardlandscape
 ```
 
 ---
