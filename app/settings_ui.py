@@ -8,7 +8,7 @@ _LAYOUTS = [
     ("portrait-c", "Portrait C", "240 × 360"),
     ("portrait-d", "Portrait D", "240 × 360"),
     ("portrait-e", "Portrait E", "240 × 360"),
-    ("portrait-f", "Bookmark",   "150 × 460"),
+    ("portrait-f", "Bookmark",   "165 × 460"),
     ("portrait-g", "Dog-ear",    "220 × 300"),
 ]
 
@@ -19,6 +19,11 @@ _THEMES = [
     ("amoled",      "AMOLED"),
     ("parchment",   "Parchment"),
     ("kraft",       "Kraft"),
+]
+
+_CORNERS = [
+    ("rounded", "Rounded"),
+    ("square",  "Square"),
 ]
 
 _DEMO_URLS = {
@@ -44,6 +49,11 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
     for key, label in _THEMES:
         sel = " selected" if key == config.theme else ""
         theme_options += f'<option value="{key}"{sel}>{label}</option>\n'
+
+    corners_options = ""
+    for key, label in _CORNERS:
+        sel = " selected" if key == config.corners else ""
+        corners_options += f'<option value="{key}"{sel}>{label}</option>\n'
 
     demo_urls_js = "{\n" + ",\n".join(
         f'    "{k}": "{v}"' for k, v in _DEMO_URLS.items()
@@ -337,6 +347,13 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
       </div>
 
       <div>
+        <div class="section-label">Corners</div>
+        <select class="label-select" id="corners-select" onchange="selectCorners(this.value)">
+          {corners_options}
+        </select>
+      </div>
+
+      <div>
         <div class="section-label">Card label</div>
         <select class="label-select" id="label-select" onchange="onLabelSelect(this.value)">
           <option value="Currently Reading">Currently Reading</option>
@@ -392,10 +409,11 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
       "Listening To", "Now Listening", "Currently Listening",
     ];
 
-    let currentLayout = "{config.layout}";
-    let currentTheme  = "{config.theme}";
-    let currentLabel  = "{config.label}";
-    let labelDebounce = null;
+    let currentLayout  = "{config.layout}";
+    let currentTheme   = "{config.theme}";
+    let currentLabel   = "{config.label}";
+    let currentCorners = "{config.corners}";
+    let labelDebounce  = null;
 
     function initLabel() {{
       const sel = document.getElementById("label-select");
@@ -431,6 +449,7 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
 
       let demoUrl = DEMO_URLS[currentLayout] + "?theme=" + currentTheme;
       if (currentLabel) demoUrl += "&label=" + encodeURIComponent(currentLabel);
+      demoUrl += "&corners=" + currentCorners;
       demoUrl += "&_t=" + Date.now();
       img.onload = () => wrap.classList.remove("preview-loading");
       img.onerror = () => wrap.classList.remove("preview-loading");
@@ -457,6 +476,11 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
       updatePreview();
     }}
 
+    function selectCorners(c) {{
+      currentCorners = c;
+      updatePreview();
+    }}
+
     async function saveConfig() {{
       const btn = document.getElementById("btn-save");
       btn.disabled = true;
@@ -464,7 +488,7 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
         const resp = await fetch("/api/config", {{
           method: "POST",
           headers: {{ "Content-Type": "application/json" }},
-          body: JSON.stringify({{ layout: currentLayout, theme: currentTheme, label: currentLabel }}),
+          body: JSON.stringify({{ layout: currentLayout, theme: currentTheme, label: currentLabel, corners: currentCorners }}),
         }});
         if (!resp.ok) throw new Error("HTTP " + resp.status);
         showToast("Saved as default", "success");

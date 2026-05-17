@@ -141,20 +141,22 @@ async def _fetch_card_data() -> Optional[CardData]:
 
 async def _serve_card(render_fn, demo_fn, nothing_fn, error_fn, theme_key: str,
                       cache_max_age: Optional[int] = None,
-                      label: Optional[str] = None) -> Response:
+                      label: Optional[str] = None,
+                      corners: str = "rounded") -> Response:
     t = THEMES.get(theme_key, THEMES[DEFAULT_THEME])
     if not _configured:
-        svg = demo_fn(t) if label is None else demo_fn(t, label=label)
+        svg = demo_fn(t, label=label, corners=corners)
         return Response(content=svg, media_type="image/svg+xml",
                         headers={"Cache-Control": "no-store"})
     try:
         data = await _fetch_card_data()
         if data is None:
             svg = nothing_fn(t)
-        elif label is not None:
-            svg = render_fn(t, data, label=label)
         else:
-            svg = render_fn(t, data)
+            kwargs: dict = {"corners": corners}
+            if label is not None:
+                kwargs["label"] = label
+            svg = render_fn(t, data, **kwargs)
     except Exception:
         logger.exception("Failed to fetch card data from ABS")
         svg = error_fn(t)
@@ -183,10 +185,11 @@ async def card_portrait_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 
 @app.get("/cardlandscapedemo")
 async def card_landscape_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
-                                       label: Optional[str] = Query(default=None)):
+                                       label: Optional[str] = Query(default=None),
+                                       corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_landscape_demo(t, label=label), media_type="image/svg+xml",
-                    headers={"Cache-Control": "no-store"})
+    return Response(content=render_landscape_demo(t, label=label, corners=corners),
+                    media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/cardlandscapestandalonedemo")
@@ -207,10 +210,11 @@ async def card_portrait_b_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 
 @app.get("/cardportraitbdemo")
 async def card_portrait_b_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
-                                        label: Optional[str] = Query(default=None)):
+                                        label: Optional[str] = Query(default=None),
+                                        corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_b_demo(t, label=label), media_type="image/svg+xml",
-                    headers={"Cache-Control": "no-store"})
+    return Response(content=render_portrait_b_demo(t, label=label, corners=corners),
+                    media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/cardportraitc")
@@ -222,10 +226,11 @@ async def card_portrait_c_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 
 @app.get("/cardportraitcdemo")
 async def card_portrait_c_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
-                                        label: Optional[str] = Query(default=None)):
+                                        label: Optional[str] = Query(default=None),
+                                        corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_c_demo(t, label=label), media_type="image/svg+xml",
-                    headers={"Cache-Control": "no-store"})
+    return Response(content=render_portrait_c_demo(t, label=label, corners=corners),
+                    media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/cardportraitd")
@@ -237,10 +242,11 @@ async def card_portrait_d_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 
 @app.get("/cardportraitddemo")
 async def card_portrait_d_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
-                                        label: Optional[str] = Query(default=None)):
+                                        label: Optional[str] = Query(default=None),
+                                        corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_d_demo(t, label=label), media_type="image/svg+xml",
-                    headers={"Cache-Control": "no-store"})
+    return Response(content=render_portrait_d_demo(t, label=label, corners=corners),
+                    media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/cardportraite")
@@ -252,10 +258,11 @@ async def card_portrait_e_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 
 @app.get("/cardportraitedemo")
 async def card_portrait_e_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
-                                        label: Optional[str] = Query(default=None)):
+                                        label: Optional[str] = Query(default=None),
+                                        corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_e_demo(t, label=label), media_type="image/svg+xml",
-                    headers={"Cache-Control": "no-store"})
+    return Response(content=render_portrait_e_demo(t, label=label, corners=corners),
+                    media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/cardportraitf")
@@ -267,10 +274,11 @@ async def card_portrait_f_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 
 @app.get("/cardportraitfdemo")
 async def card_portrait_f_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
-                                        label: Optional[str] = Query(default=None)):
+                                        label: Optional[str] = Query(default=None),
+                                        corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_f_demo(t, label=label), media_type="image/svg+xml",
-                    headers={"Cache-Control": "no-store"})
+    return Response(content=render_portrait_f_demo(t, label=label, corners=corners),
+                    media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/cardportraitg")
@@ -282,18 +290,20 @@ async def card_portrait_g_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 
 @app.get("/cardportraitgdemo")
 async def card_portrait_g_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
-                                        label: Optional[str] = Query(default=None)):
+                                        label: Optional[str] = Query(default=None),
+                                        corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_g_demo(t, label=label), media_type="image/svg+xml",
-                    headers={"Cache-Control": "no-store"})
+    return Response(content=render_portrait_g_demo(t, label=label, corners=corners),
+                    media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/cardportraitdemo")
 async def card_portrait_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
-                                      label: Optional[str] = Query(default=None)):
+                                      label: Optional[str] = Query(default=None),
+                                      corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_demo(t, label=label), media_type="image/svg+xml",
-                    headers={"Cache-Control": "no-store"})
+    return Response(content=render_portrait_demo(t, label=label, corners=corners),
+                    media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/health")
@@ -344,7 +354,7 @@ async def settings_page(request: Request):
 @app.get("/api/config")
 async def get_config():
     cfg = load_config()
-    return {"layout": cfg.layout, "theme": cfg.theme, "label": cfg.label}
+    return {"layout": cfg.layout, "theme": cfg.theme, "label": cfg.label, "corners": cfg.corners}
 
 
 @app.post("/api/config")
@@ -353,21 +363,26 @@ async def post_config(request: Request):
     layout = body.get("layout", "landscape")
     theme = body.get("theme", "dark")
     label = body.get("label", "Currently Reading")
-    from .config import VALID_LAYOUTS, VALID_THEMES
+    corners = body.get("corners", "rounded")
+    from .config import VALID_LAYOUTS, VALID_THEMES, VALID_CORNERS
     if layout not in VALID_LAYOUTS:
         return JSONResponse({"error": f"Unknown layout: {layout}"}, status_code=400)
     if theme not in VALID_THEMES:
         return JSONResponse({"error": f"Unknown theme: {theme}"}, status_code=400)
+    if corners not in VALID_CORNERS:
+        return JSONResponse({"error": f"Unknown corners: {corners}"}, status_code=400)
     if not isinstance(label, str) or not label.strip():
         label = "Currently Reading"
-    cfg = AppConfig(layout=layout, theme=theme, label=label.strip())
+    cfg = AppConfig(layout=layout, theme=theme, label=label.strip(), corners=corners)
     save_config(cfg)
-    return {"layout": cfg.layout, "theme": cfg.theme, "label": cfg.label, "saved": True}
+    return {"layout": cfg.layout, "theme": cfg.theme, "label": cfg.label,
+            "corners": cfg.corners, "saved": True}
 
 
 @app.get("/card")
 async def card_default():
-    """Primary embed endpoint — layout, theme, and label come from saved config."""
+    """Primary embed endpoint — layout, theme, label, and corners come from saved config."""
     cfg = load_config()
     fns = _LAYOUT_MAP[cfg.layout]
-    return await _serve_card(*fns, cfg.theme, cache_max_age=30, label=cfg.label)
+    return await _serve_card(*fns, cfg.theme, cache_max_age=30, label=cfg.label,
+                             corners=cfg.corners)

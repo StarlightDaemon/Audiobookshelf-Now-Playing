@@ -16,6 +16,7 @@ VALID_LAYOUTS = {
     "portrait-f", "portrait-g",
 }
 VALID_THEMES = {"dark", "light", "github-dark", "amoled", "parchment", "kraft"}
+VALID_CORNERS = {"rounded", "square"}
 
 
 @dataclass
@@ -23,6 +24,7 @@ class AppConfig:
     layout: str = "landscape"
     theme: str = "dark"
     label: str = "Currently Reading"
+    corners: str = "rounded"
 
 
 def load_config() -> AppConfig:
@@ -32,13 +34,16 @@ def load_config() -> AppConfig:
         layout = data.get("layout", "landscape")
         theme = data.get("theme", "dark")
         label = data.get("label", "Currently Reading")
+        corners = data.get("corners", "rounded")
         if layout not in VALID_LAYOUTS:
             layout = "landscape"
         if theme not in VALID_THEMES:
             theme = "dark"
         if not isinstance(label, str) or not label.strip():
             label = "Currently Reading"
-        return AppConfig(layout=layout, theme=theme, label=label)
+        if corners not in VALID_CORNERS:
+            corners = "rounded"
+        return AppConfig(layout=layout, theme=theme, label=label, corners=corners)
     except FileNotFoundError:
         return AppConfig()
     except Exception:

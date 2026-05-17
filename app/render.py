@@ -54,9 +54,9 @@ def _trunc(s: str, n: int) -> str:
     return s if len(s) <= n else s[: n - 1] + "…"
 
 
-def _bg(w: int, h: int, theme: Theme) -> str:
+def _bg(w: int, h: int, theme: Theme, rx: int = 10) -> str:
     return (
-        f'<rect width="{w}" height="{h}" rx="10"'
+        f'<rect width="{w}" height="{h}" rx="{rx}"'
         f' fill="{theme.background}" stroke="{theme.border}" stroke-width="1"/>'
     )
 
@@ -65,11 +65,12 @@ def _cover(
     x: int, y: int, w: int, h: int,
     cover_b64: Optional[str], theme: Theme,
     clip_id: str = "cc",
+    rx: int = 6,
 ) -> str:
     if cover_b64:
         return (
             f'<defs><clipPath id="{clip_id}">'
-            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="6"/>'
+            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{rx}"/>'
             f'</clipPath></defs>'
             f'<image href="{cover_b64}" x="{x}" y="{y}" width="{w}" height="{h}"'
             f' clip-path="url(#{clip_id})" preserveAspectRatio="xMidYMid slice"/>'
@@ -78,7 +79,7 @@ def _cover(
     mid_y = y + h // 2
     fs = min(48, w // 3)
     return (
-        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="6" fill="{theme.border}"/>'
+        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{rx}" fill="{theme.border}"/>'
         f'<text x="{mid_x}" y="{mid_y + fs // 3}" font-size="{fs}" text-anchor="middle"'
         f' font-family="serif" fill="{theme.text_secondary}">&#128214;</text>'
     )
@@ -158,7 +159,9 @@ _LS_SEP_X = 355
 _LS_META_X = 372
 
 
-def render_landscape(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
+def render_landscape(theme: Theme, data: CardData, label: str = "Currently Reading",
+                     corners: str = "rounded") -> str:
+    card_rx = 0 if corners == "square" else 10
     # Primary zone — evenly distributed across full card height (content area y=20..140)
     y_label, y_title, y_author = 50, 80, 110
 
@@ -200,7 +203,7 @@ def render_landscape(theme: Theme, data: CardData, label: str = "Currently Readi
     return (
         f'<svg width="{_LS_W}" height="{_LS_H}" xmlns="http://www.w3.org/2000/svg"'
         f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
-        f'  {_bg(_LS_W, _LS_H, theme)}\n'
+        f'  {_bg(_LS_W, _LS_H, theme, rx=card_rx)}\n'
         f'  {_cover(_LS_COVER_X, _LS_COVER_Y, _LS_COVER_W, _LS_COVER_H, data.cover_b64, theme)}\n'
         f'  <text x="{_LS_PRIMARY_X}" y="{y_label}" font-family="{_FONT}"'
         f' font-size="10" fill="{theme.text_secondary}">{_x(label)}</text>\n'
@@ -226,8 +229,10 @@ def _ls_status_card(theme: Theme, message: str) -> str:
     )
 
 
-def render_landscape_demo(theme: Theme, label: Optional[str] = None) -> str:
-    return render_landscape(theme, _DEMO_DATA, label=label or "Demo — configure credentials to go live")
+def render_landscape_demo(theme: Theme, label: Optional[str] = None,
+                          corners: str = "rounded") -> str:
+    return render_landscape(theme, _DEMO_DATA, corners=corners,
+                            label=label or "Demo — configure credentials to go live")
 
 
 def render_landscape_standalone_demo(theme: Theme) -> str:
@@ -268,7 +273,9 @@ _PT_COVER_Y = _PT_PAD
 _PT_DIV_Y   = _PT_COVER_Y + _PT_COVER_H + 8   # 232
 
 
-def render_portrait(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
+def render_portrait(theme: Theme, data: CardData, label: str = "Currently Reading",
+                    corners: str = "rounded") -> str:
+    card_rx = 0 if corners == "square" else 10
     title  = _x(_trunc(data.title, 22))
     author = _x(_trunc(data.author, 24))
 
@@ -286,6 +293,7 @@ def render_portrait(theme: Theme, data: CardData, label: str = "Currently Readin
     if data.series:
         lines.append((11, False, _x(_trunc(data.series, 24))))
 
+    line_gap = 5
     y = _PT_DIV_Y + 22
     text_els = ""
     for size, bold, content in lines:
@@ -295,7 +303,7 @@ def render_portrait(theme: Theme, data: CardData, label: str = "Currently Readin
             f'  <text x="{_PT_PAD}" y="{y}" font-family="{_FONT}"'
             f' font-size="{size}"{weight} fill="{color}">{content}</text>\n'
         )
-        y += size + 7
+        y += size + line_gap
 
     divider = (
         f'  <line x1="{_PT_PAD}" y1="{_PT_DIV_Y}"'
@@ -309,7 +317,7 @@ def render_portrait(theme: Theme, data: CardData, label: str = "Currently Readin
     return (
         f'<svg width="{_PT_W}" height="{_PT_H}" xmlns="http://www.w3.org/2000/svg"'
         f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
-        f'  {_bg(_PT_W, _PT_H, theme)}\n'
+        f'  {_bg(_PT_W, _PT_H, theme, rx=card_rx)}\n'
         f'  {_cover(_PT_COVER_X, _PT_COVER_Y, _PT_COVER_W, _PT_COVER_H, data.cover_b64, theme, clip_id="pc")}\n'
         f'{divider}'
         f'{text_els}'
@@ -330,8 +338,10 @@ def _pt_status_card(theme: Theme, message: str) -> str:
     )
 
 
-def render_portrait_demo(theme: Theme, label: Optional[str] = None) -> str:
-    return render_portrait(theme, _DEMO_DATA, label=label or "Demo — configure credentials")
+def render_portrait_demo(theme: Theme, label: Optional[str] = None,
+                         corners: str = "rounded") -> str:
+    return render_portrait(theme, _DEMO_DATA, corners=corners,
+                           label=label or "Demo — configure credentials")
 
 
 def render_portrait_nothing_playing(theme: Theme) -> str:
@@ -357,9 +367,11 @@ def render_portrait_error(theme: Theme) -> str:
 #  │  Narrated by Ray Porter  │
 #  └──────────────────────────┘
 
-def render_portrait_b(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
+def render_portrait_b(theme: Theme, data: CardData, label: str = "Currently Reading",
+                      corners: str = "rounded") -> str:
     w, h = _PT_W, _PT_H
     pad  = _PT_PAD
+    card_rx = 0 if corners == "square" else 10
 
     # Text lines (bottom section, starting ~y=220)
     title  = _x(_trunc(data.title,  22))
@@ -407,7 +419,7 @@ def render_portrait_b(theme: Theme, data: CardData, label: str = "Currently Read
     grad_y_pct = "45%"
     defs = (
         f'<defs>'
-        f'<clipPath id="bcc"><rect width="{w}" height="{h}" rx="10"/></clipPath>'
+        f'<clipPath id="bcc"><rect width="{w}" height="{h}" rx="{card_rx}"/></clipPath>'
         f'<linearGradient id="bgrad" x1="0" y1="0" x2="0" y2="1">'
         f'<stop offset="{grad_y_pct}" stop-color="{theme.background}" stop-opacity="0"/>'
         f'<stop offset="100%" stop-color="{theme.background}" stop-opacity="1"/>'
@@ -420,11 +432,15 @@ def render_portrait_b(theme: Theme, data: CardData, label: str = "Currently Read
             f'  <image href="{data.cover_b64}" x="0" y="0" width="{w}" height="{h}"'
             f' clip-path="url(#bcc)" preserveAspectRatio="xMidYMid slice"/>\n'
         )
+        icon_el = ""
     else:
-        # No cover — show accent-tinted top half, dark bottom
+        # No cover — accent-tinted background, icon anchored just above text block
         cover_el = (
-            f'  <rect width="{w}" height="{h // 2}" fill="{theme.accent}" opacity="0.25"/>\n'
-            f'  <text x="{w // 2}" y="{h // 4 + 16}" font-size="48" text-anchor="middle"'
+            f'  <rect width="{w}" height="{h}" fill="{theme.accent}" opacity="0.15"/>\n'
+        )
+        icon_y = y_start - 14
+        icon_el = (
+            f'  <text x="{w // 2}" y="{icon_y}" font-size="48" text-anchor="middle"'
             f' font-family="serif" fill="{theme.text_secondary}">&#128214;</text>\n'
         )
 
@@ -434,17 +450,20 @@ def render_portrait_b(theme: Theme, data: CardData, label: str = "Currently Read
         f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg"'
         f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
         f'  {defs}\n'
-        f'  {_bg(w, h, theme)}\n'
+        f'  {_bg(w, h, theme, rx=card_rx)}\n'
         f'{cover_el}'
         f'  <rect width="{w}" height="{h}" clip-path="url(#bcc)" fill="url(#bgrad)"/>\n'
+        f'{icon_el}'
         f'{text_els}'
         f'  {bar}\n'
         f'</svg>'
     )
 
 
-def render_portrait_b_demo(theme: Theme, label: Optional[str] = None) -> str:
-    return render_portrait_b(theme, _DEMO_DATA, label=label or "Demo — configure credentials")
+def render_portrait_b_demo(theme: Theme, label: Optional[str] = None,
+                           corners: str = "rounded") -> str:
+    return render_portrait_b(theme, _DEMO_DATA, corners=corners,
+                             label=label or "Demo — configure credentials")
 
 
 def render_portrait_b_nothing(theme: Theme) -> str:
@@ -471,13 +490,15 @@ def render_portrait_b_error(theme: Theme) -> str:
 #  │                          │
 #  └──────────────────────────┘
 
-def render_portrait_c(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
+def render_portrait_c(theme: Theme, data: CardData, label: str = "Currently Reading",
+                      corners: str = "rounded") -> str:
     w, h   = _PT_W, _PT_H
     pad    = _PT_PAD
     p_pad  = 12    # panel internal padding
     p_x    = pad
     p_w    = w - 2 * pad
     p_rx   = 8
+    card_rx = 0 if corners == "square" else 10
 
     title  = _x(_trunc(data.title,  22))
     author = _x(_trunc(data.author, 24))
@@ -515,7 +536,7 @@ def render_portrait_c(theme: Theme, data: CardData, label: str = "Currently Read
 
     defs = (
         f'<defs>'
-        f'<clipPath id="ccc"><rect width="{w}" height="{h}" rx="10"/></clipPath>'
+        f'<clipPath id="ccc"><rect width="{w}" height="{h}" rx="{card_rx}"/></clipPath>'
         f'<filter id="cblur" x="-10%" y="-10%" width="120%" height="120%">'
         f'<feGaussianBlur stdDeviation="8"/>'
         f'</filter>'
@@ -549,7 +570,7 @@ def render_portrait_c(theme: Theme, data: CardData, label: str = "Currently Read
         f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg"'
         f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
         f'  {defs}\n'
-        f'  {_bg(w, h, theme)}\n'
+        f'  {_bg(w, h, theme, rx=card_rx)}\n'
         f'{cover_el}'
         f'{panel}'
         f'{text_els}'
@@ -558,8 +579,10 @@ def render_portrait_c(theme: Theme, data: CardData, label: str = "Currently Read
     )
 
 
-def render_portrait_c_demo(theme: Theme, label: Optional[str] = None) -> str:
-    return render_portrait_c(theme, _DEMO_DATA, label=label or "Demo — configure credentials")
+def render_portrait_c_demo(theme: Theme, label: Optional[str] = None,
+                           corners: str = "rounded") -> str:
+    return render_portrait_c(theme, _DEMO_DATA, corners=corners,
+                             label=label or "Demo — configure credentials")
 
 
 def render_portrait_c_nothing(theme: Theme) -> str:
@@ -586,11 +609,13 @@ def render_portrait_c_error(theme: Theme) -> str:
 
 _D_STRIPE_W = 6
 
-def render_portrait_d(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
+def render_portrait_d(theme: Theme, data: CardData, label: str = "Currently Reading",
+                      corners: str = "rounded") -> str:
     w, h      = _PT_W, _PT_H
     pad       = _PT_PAD
     sw        = _D_STRIPE_W
     content_x = sw + pad          # text/cover start x
+    card_rx   = 0 if corners == "square" else 10
 
     # Cover thumbnail — square, fits in content column
     thumb_size = 100
@@ -634,7 +659,7 @@ def render_portrait_d(theme: Theme, data: CardData, label: str = "Currently Read
 
     defs = (
         f'<defs>'
-        f'<clipPath id="dcc"><rect width="{w}" height="{h}" rx="10"/></clipPath>'
+        f'<clipPath id="dcc"><rect width="{w}" height="{h}" rx="{card_rx}"/></clipPath>'
         f'<clipPath id="dthumb"><rect x="{thumb_x}" y="{thumb_y}" width="{thumb_size}" height="{thumb_size}" rx="6"/></clipPath>'
         f'<linearGradient id="dstripe" x1="0" y1="0" x2="0" y2="1">'
         f'<stop offset="0%" stop-color="{theme.accent}"/>'
@@ -661,7 +686,7 @@ def render_portrait_d(theme: Theme, data: CardData, label: str = "Currently Read
         thumb_el = (
             f'  <rect x="{thumb_x}" y="{thumb_y}" width="{thumb_size}" height="{thumb_size}"'
             f' rx="6" fill="{theme.border}"/>\n'
-            f'  <text x="{mid_x}" y="{mid_y + 12}" font-size="28" text-anchor="middle"'
+            f'  <text x="{mid_x}" y="{mid_y + 12}" font-size="32" text-anchor="middle"'
             f' font-family="serif" fill="{theme.text_secondary}">&#128214;</text>\n'
         )
 
@@ -671,7 +696,7 @@ def render_portrait_d(theme: Theme, data: CardData, label: str = "Currently Read
         f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg"'
         f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
         f'  {defs}\n'
-        f'  {_bg(w, h, theme)}\n'
+        f'  {_bg(w, h, theme, rx=card_rx)}\n'
         f'  <rect x="0" y="0" width="{sw}" height="{h}" rx="0" clip-path="url(#dcc)"'
         f' fill="url(#dstripe)"/>\n'
         f'{thumb_el}'
@@ -682,8 +707,10 @@ def render_portrait_d(theme: Theme, data: CardData, label: str = "Currently Read
     )
 
 
-def render_portrait_d_demo(theme: Theme, label: Optional[str] = None) -> str:
-    return render_portrait_d(theme, _DEMO_DATA, label=label or "Demo — configure credentials")
+def render_portrait_d_demo(theme: Theme, label: Optional[str] = None,
+                           corners: str = "rounded") -> str:
+    return render_portrait_d(theme, _DEMO_DATA, corners=corners,
+                             label=label or "Demo — configure credentials")
 
 
 def render_portrait_d_nothing(theme: Theme) -> str:
@@ -733,9 +760,11 @@ def _word_wrap(text: str, max_chars: int) -> list[str]:
     return lines or [""]
 
 
-def render_portrait_e(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
+def render_portrait_e(theme: Theme, data: CardData, label: str = "Currently Reading",
+                      corners: str = "rounded") -> str:
     w, h  = _PT_W, _PT_H
     pad   = _PT_PAD
+    card_rx = 0 if corners == "square" else 10
 
     thumb = 80
     thumb_x, thumb_y = pad, 44
@@ -752,13 +781,12 @@ def render_portrait_e(theme: Theme, data: CardData, label: str = "Currently Read
 
     rule_y = title_y_start + len(title_lines) * title_line_h + 10
 
-    # Lower detail lines
+    # Lower detail lines — year already shown beside thumbnail, omit from here
     detail_lines: list[tuple[str, bool]] = []
     if data.narrator:
         detail_lines.append((f'Narrated by {_x(_trunc(data.narrator, 22))}', False))
-    pubyr_parts = [p for p in [data.publisher, data.year] if p]
-    if pubyr_parts:
-        detail_lines.append((_x(_trunc(" · ".join(pubyr_parts), 26)), False))
+    if data.publisher:
+        detail_lines.append((_x(_trunc(data.publisher, 26)), False))
     if data.series:
         detail_lines.append((_x(_trunc(data.series, 26)), False))
     else:
@@ -807,7 +835,7 @@ def render_portrait_e(theme: Theme, data: CardData, label: str = "Currently Read
     return (
         f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg"'
         f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
-        f'  {_bg(w, h, theme)}\n'
+        f'  {_bg(w, h, theme, rx=card_rx)}\n'
         f'  <text x="{pad}" y="28" font-family="{_FONT}" font-size="9"'
         f' fill="{theme.accent}" letter-spacing="2">{_x(label.upper())}</text>\n'
         f'{thumb_el}'
@@ -823,8 +851,10 @@ def render_portrait_e(theme: Theme, data: CardData, label: str = "Currently Read
     )
 
 
-def render_portrait_e_demo(theme: Theme, label: Optional[str] = None) -> str:
-    return render_portrait_e(theme, _DEMO_DATA, label=label or "Currently Reading")
+def render_portrait_e_demo(theme: Theme, label: Optional[str] = None,
+                           corners: str = "rounded") -> str:
+    return render_portrait_e(theme, _DEMO_DATA, corners=corners,
+                             label=label or "Currently Reading")
 
 
 def render_portrait_e_nothing(theme: Theme) -> str:
@@ -835,7 +865,7 @@ def render_portrait_e_error(theme: Theme) -> str:
     return _pt_status_card(theme, "Unable to reach Audiobookshelf")
 
 
-# ── Layout F — Slim Bookmark (150×460) ───────────────────────────────────────
+# ── Layout F — Slim Bookmark (165×460) ───────────────────────────────────────
 #
 #  ┌─────────────┐
 #  │      ●      │  ← decorative hole
@@ -853,11 +883,11 @@ def render_portrait_e_error(theme: Theme) -> str:
 #  └──────┬──────┘
 #          ▼  V-notch
 
-_PF_W        = 150
+_PF_W        = 165
 _PF_H        = 460
 _PF_NOTCH    = 26
 _PF_PAD      = 14
-_PF_COVER_SZ = 120
+_PF_COVER_SZ = 135
 _PF_RX       = 10
 _PF_HOLE_R   = 6
 
@@ -882,32 +912,34 @@ def _pf_status_card(theme: Theme, message: str) -> str:
     )
 
 
-def render_portrait_f(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
+def render_portrait_f(theme: Theme, data: CardData, label: str = "Currently Reading",
+                      corners: str = "rounded") -> str:
     w, h    = _PF_W, _PF_H
     pad     = _PF_PAD
     notch   = _PF_NOTCH
     cov_sz  = _PF_COVER_SZ
+    path_rx = 0 if corners == "square" else _PF_RX
 
-    bm_path = _pf_bm_path(w, h, notch, _PF_RX)
+    bm_path = _pf_bm_path(w, h, notch, path_rx)
 
     hole_cx = w // 2
     hole_cy = 18
     cov_x   = pad
     cov_y   = hole_cy + _PF_HOLE_R + 8   # 32
-    div_y   = cov_y + cov_sz + 8         # 160
+    div_y   = cov_y + cov_sz + 8
 
-    title_lines = _word_wrap(data.title, 14)[:2]
+    title_lines = _word_wrap(data.title, 16)[:2]
     lines: list[tuple[int, bool, str]] = [(9, False, _x(label))]
     for tl in title_lines:
         lines.append((13, True, _x(tl)))
-    lines.append((11, False, _x(_trunc(data.author, 16))))
+    lines.append((11, False, _x(_trunc(data.author, 18))))
     if data.narrator:
-        lines.append((10, False, _x(_trunc(data.narrator, 17))))
+        lines.append((10, False, _x(_trunc(data.narrator, 19))))
     pubyr_parts = [p for p in [data.publisher, data.year] if p]
     if pubyr_parts:
-        lines.append((10, False, _x(_trunc(" · ".join(pubyr_parts), 17))))
+        lines.append((10, False, _x(_trunc(" · ".join(pubyr_parts), 19))))
     if data.series:
-        lines.append((10, False, _x(_trunc(data.series, 17))))
+        lines.append((10, False, _x(_trunc(data.series, 19))))
 
     y = div_y + 16
     text_els = ""
@@ -943,8 +975,10 @@ def render_portrait_f(theme: Theme, data: CardData, label: str = "Currently Read
     )
 
 
-def render_portrait_f_demo(theme: Theme, label: Optional[str] = None) -> str:
-    return render_portrait_f(theme, _DEMO_DATA, label=label or "Currently Reading")
+def render_portrait_f_demo(theme: Theme, label: Optional[str] = None,
+                           corners: str = "rounded") -> str:
+    return render_portrait_f(theme, _DEMO_DATA, corners=corners,
+                             label=label or "Currently Reading")
 
 
 def render_portrait_f_nothing(theme: Theme) -> str:
@@ -1004,12 +1038,14 @@ def _pg_status_card(theme: Theme, message: str) -> str:
     )
 
 
-def render_portrait_g(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
+def render_portrait_g(theme: Theme, data: CardData, label: str = "Currently Reading",
+                      corners: str = "rounded") -> str:
     w, h  = _PG_W, _PG_H
     pad   = _PG_PAD
     fold  = _PG_FOLD
+    path_rx = 0 if corners == "square" else _PG_RX
 
-    card_path = _pg_card_path(w, h, fold, _PG_RX)
+    card_path = _pg_card_path(w, h, fold, path_rx)
     flap_path = _pg_flap_path(w, h, fold)
 
     cov_sz = 80
@@ -1082,8 +1118,10 @@ def render_portrait_g(theme: Theme, data: CardData, label: str = "Currently Read
     )
 
 
-def render_portrait_g_demo(theme: Theme, label: Optional[str] = None) -> str:
-    return render_portrait_g(theme, _DEMO_DATA, label=label or "Currently Reading")
+def render_portrait_g_demo(theme: Theme, label: Optional[str] = None,
+                           corners: str = "rounded") -> str:
+    return render_portrait_g(theme, _DEMO_DATA, corners=corners,
+                             label=label or "Currently Reading")
 
 
 def render_portrait_g_nothing(theme: Theme) -> str:
