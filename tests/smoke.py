@@ -19,6 +19,8 @@ from app.render import (
     render_portrait_c_demo,
     render_portrait_d_demo,
     render_portrait_e_demo,
+    render_portrait_f_demo,
+    render_portrait_g_demo,
 )
 from app.themes import THEMES
 
@@ -29,6 +31,8 @@ RENDERERS = [
     ("render_portrait_c_demo",  render_portrait_c_demo),
     ("render_portrait_d_demo",  render_portrait_d_demo),
     ("render_portrait_e_demo",  render_portrait_e_demo),
+    ("render_portrait_f_demo",  render_portrait_f_demo),
+    ("render_portrait_g_demo",  render_portrait_g_demo),
 ]
 
 

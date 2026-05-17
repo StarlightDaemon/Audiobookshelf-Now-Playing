@@ -39,6 +39,20 @@ THEMES: dict[str, Theme] = {
         text_primary="#ffffff",
         text_secondary="#8e8e93",
     ),
+    "parchment": Theme(
+        background="#f5edd8",
+        border="#cdb891",
+        accent="#8b5e3c",
+        text_primary="#2c1a0e",
+        text_secondary="#7a5c3a",
+    ),
+    "kraft": Theme(
+        background="#eddec4",
+        border="#c4a07a",
+        accent="#7a4a1e",
+        text_primary="#231509",
+        text_secondary="#8a6040",
+    ),
 }
 
 DEFAULT_THEME = "dark"

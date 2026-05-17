@@ -18,6 +18,8 @@ from .render import (
     render_portrait_c, render_portrait_c_demo, render_portrait_c_nothing, render_portrait_c_error,
     render_portrait_d, render_portrait_d_demo, render_portrait_d_nothing, render_portrait_d_error,
     render_portrait_e, render_portrait_e_demo, render_portrait_e_nothing, render_portrait_e_error,
+    render_portrait_f, render_portrait_f_demo, render_portrait_f_nothing, render_portrait_f_error,
+    render_portrait_g, render_portrait_g_demo, render_portrait_g_nothing, render_portrait_g_error,
 )
 from .settings_ui import build_settings_page
 from .themes import DEFAULT_THEME, THEMES
@@ -256,6 +258,36 @@ async def card_portrait_e_demo_endpoint(theme: str = Query(default=DEFAULT_THEME
                     headers={"Cache-Control": "no-store"})
 
 
+@app.get("/cardportraitf")
+async def card_portrait_f_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+    return await _serve_card(
+        render_portrait_f, render_portrait_f_demo,
+        render_portrait_f_nothing, render_portrait_f_error, theme,
+    )
+
+@app.get("/cardportraitfdemo")
+async def card_portrait_f_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
+                                        label: Optional[str] = Query(default=None)):
+    t = THEMES.get(theme, THEMES[DEFAULT_THEME])
+    return Response(content=render_portrait_f_demo(t, label=label), media_type="image/svg+xml",
+                    headers={"Cache-Control": "no-store"})
+
+
+@app.get("/cardportraitg")
+async def card_portrait_g_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+    return await _serve_card(
+        render_portrait_g, render_portrait_g_demo,
+        render_portrait_g_nothing, render_portrait_g_error, theme,
+    )
+
+@app.get("/cardportraitgdemo")
+async def card_portrait_g_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
+                                        label: Optional[str] = Query(default=None)):
+    t = THEMES.get(theme, THEMES[DEFAULT_THEME])
+    return Response(content=render_portrait_g_demo(t, label=label), media_type="image/svg+xml",
+                    headers={"Cache-Control": "no-store"})
+
+
 @app.get("/cardportraitdemo")
 async def card_portrait_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
                                       label: Optional[str] = Query(default=None)):
@@ -297,6 +329,8 @@ _LAYOUT_MAP = {
     "portrait-c": (render_portrait_c, render_portrait_c_demo, render_portrait_c_nothing,        render_portrait_c_error),
     "portrait-d": (render_portrait_d, render_portrait_d_demo, render_portrait_d_nothing,        render_portrait_d_error),
     "portrait-e": (render_portrait_e, render_portrait_e_demo, render_portrait_e_nothing,        render_portrait_e_error),
+    "portrait-f": (render_portrait_f, render_portrait_f_demo, render_portrait_f_nothing,        render_portrait_f_error),
+    "portrait-g": (render_portrait_g, render_portrait_g_demo, render_portrait_g_nothing,        render_portrait_g_error),
 }
 
 

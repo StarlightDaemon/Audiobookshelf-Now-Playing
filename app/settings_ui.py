@@ -1,12 +1,24 @@
 from .config import AppConfig
+from .fujin_tokens import load_dark_tokens
 
 _LAYOUTS = [
-    ("landscape",  "Landscape",  "600 × 160",  "Wide banner · cover + two metadata columns"),
-    ("portrait",   "Portrait A", "240 × 360",  "Classic stacked · cover above text block"),
-    ("portrait-b", "Portrait B", "240 × 360",  "Full-bleed cover · gradient overlay"),
-    ("portrait-c", "Portrait C", "240 × 360",  "Blurred cover · frosted-glass panel"),
-    ("portrait-d", "Portrait D", "240 × 360",  "Sidebar accent stripe · small thumbnail"),
-    ("portrait-e", "Portrait E", "240 × 360",  "Editorial / typographic · large wrapped title"),
+    ("landscape",  "Landscape",  "600 × 160"),
+    ("portrait",   "Portrait A", "240 × 360"),
+    ("portrait-b", "Portrait B", "240 × 360"),
+    ("portrait-c", "Portrait C", "240 × 360"),
+    ("portrait-d", "Portrait D", "240 × 360"),
+    ("portrait-e", "Portrait E", "240 × 360"),
+    ("portrait-f", "Bookmark",   "150 × 460"),
+    ("portrait-g", "Dog-ear",    "220 × 300"),
+]
+
+_THEMES = [
+    ("dark",        "Dark"),
+    ("light",       "Light"),
+    ("github-dark", "GitHub Dark"),
+    ("amoled",      "AMOLED"),
+    ("parchment",   "Parchment"),
+    ("kraft",       "Kraft"),
 ]
 
 _DEMO_URLS = {
@@ -16,20 +28,22 @@ _DEMO_URLS = {
     "portrait-c": "/cardportraitcdemo",
     "portrait-d": "/cardportraitddemo",
     "portrait-e": "/cardportraitedemo",
+    "portrait-f": "/cardportraitfdemo",
+    "portrait-g": "/cardportraitgdemo",
 }
 
 
 def build_settings_page(config: AppConfig, base_url: str = "") -> str:
-    layout_rows = ""
-    for key, name, dims, desc in _LAYOUTS:
-        sel = "selected" if key == config.layout else ""
-        layout_rows += (
-            f'<div class="layout-option {sel}" data-layout="{key}" onclick="selectLayout(\'{key}\')">'
-            f'<div class="lo-header"><span class="lo-name">{name}</span>'
-            f'<span class="lo-dims">{dims}</span></div>'
-            f'<div class="lo-desc">{desc}</div>'
-            f'</div>\n'
-        )
+    t = load_dark_tokens()
+    layout_options = ""
+    for key, name, dims in _LAYOUTS:
+        sel = " selected" if key == config.layout else ""
+        layout_options += f'<option value="{key}"{sel}>{name} — {dims}</option>\n'
+
+    theme_options = ""
+    for key, label in _THEMES:
+        sel = " selected" if key == config.theme else ""
+        theme_options += f'<option value="{key}"{sel}>{label}</option>\n'
 
     demo_urls_js = "{\n" + ",\n".join(
         f'    "{k}": "{v}"' for k, v in _DEMO_URLS.items()
@@ -45,18 +59,17 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 
     :root {{
-      --bg: #0d1117;
-      --surface: #161b22;
-      --surface2: #21262d;
-      --border: #30363d;
-      --accent: #4d8ef0;
-      --accent-dim: rgba(77,142,240,0.15);
-      --text: #c9d1d9;
-      --text-dim: #8b949e;
-      --success: #3fb950;
-      --radius: 8px;
-      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      --font-mono: "Fira Code", "Courier New", monospace;
+      --bg:        {t['--bg']};
+      --surface:   {t['--surface']};
+      --surface2:  {t['--surface2']};
+      --border:    {t['--border']};
+      --accent:    {t['--accent']};
+      --accent-dim: {t['--accent-dim']};
+      --text:      {t['--text']};
+      --text-dim:  {t['--text-dim']};
+      --success:   {t['--success']};
+      --font:      {t['--font']};
+      --font-mono: {t['--font-mono']};
     }}
 
     body {{
@@ -89,7 +102,7 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
     }}
 
     .dot {{
-      width: 8px; height: 8px; border-radius: 50%;
+      width: 8px; height: 8px;
       background: var(--accent);
       flex-shrink: 0;
     }}
@@ -132,63 +145,30 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
       margin-bottom: 8px;
     }}
 
-    .layout-option {{
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px 12px;
-      cursor: pointer;
-      margin-bottom: 6px;
-      transition: border-color 0.15s, background 0.15s;
-    }}
-
-    .layout-option:hover {{
-      border-color: var(--accent);
-      background: var(--accent-dim);
-    }}
-
-    .layout-option.selected {{
-      border-color: var(--accent);
-      background: var(--accent-dim);
-    }}
-
-    .lo-header {{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 3px;
-    }}
-
-    .lo-name {{
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-    }}
-
-    .lo-dims {{
-      font-size: 11px;
-      color: var(--text-dim);
-      font-family: var(--font-mono);
-    }}
-
-    .lo-desc {{
-      font-size: 11px;
-      color: var(--text-dim);
-    }}
-
-    .label-input {{
+    .label-select, .label-input {{
       width: 100%;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 0;
       padding: 8px 10px;
       font-family: var(--font);
       font-size: 13px;
       color: var(--text);
       outline: none;
       transition: border-color 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
     }}
 
-    .label-input:focus {{
+    .label-select {{
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b949e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+      cursor: pointer;
+    }}
+
+    .label-select:focus, .label-input:focus {{
       border-color: var(--accent);
     }}
 
@@ -196,43 +176,20 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
       color: var(--text-dim);
     }}
 
-    .theme-grid {{
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
+    .label-custom {{
+      margin-top: 6px;
+      display: none;
     }}
 
-    .theme-btn {{
-      padding: 8px 0;
-      text-align: center;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 500;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
-      color: var(--text-dim);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: transparent;
-      outline: none;
-    }}
-
-    .theme-btn.active {{
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-    }}
-
-    .theme-btn:not(.active):hover {{
-      background: var(--surface2);
-      color: var(--text);
+    .label-custom.visible {{
+      display: block;
     }}
 
     .preview-card {{
       max-width: 100%;
-      border-radius: 10px;
       overflow: hidden;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
-      transition: opacity 0.2s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+      transition: opacity 0.15s;
     }}
 
     .preview-card img {{
@@ -268,7 +225,7 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
       flex: 1;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 0;
       padding: 8px 12px;
       font-family: var(--font-mono);
       font-size: 11px;
@@ -281,7 +238,7 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
 
     .btn {{
       padding: 8px 14px;
-      border-radius: var(--radius);
+      border-radius: 0;
       border: 1px solid var(--border);
       cursor: pointer;
       font-size: 12px;
@@ -322,7 +279,7 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
       transform: translateX(-50%) translateY(80px);
       background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 0;
       padding: 10px 20px;
       font-size: 13px;
       color: var(--text);
@@ -367,28 +324,33 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
     <div class="sidebar">
       <div>
         <div class="section-label">Layout</div>
-        {layout_rows}
-      </div>
-
-      <div>
-        <div class="section-label">Card label</div>
-        <input class="label-input" id="label-input" type="text"
-               placeholder="Currently Reading"
-               value="{config.label}"
-               oninput="onLabelInput(this.value)">
+        <select class="label-select" id="layout-select" onchange="selectLayout(this.value)">
+          {layout_options}
+        </select>
       </div>
 
       <div>
         <div class="section-label">Theme</div>
-        <div class="theme-grid">
-          <button class="theme-btn {'active' if config.theme == 'dark' else ''}"
-                  id="btn-dark" onclick="selectTheme('dark')">Dark</button>
-          <button class="theme-btn {'active' if config.theme == 'light' else ''}"
-                  id="btn-light" onclick="selectTheme('light')">Light</button>
-          <button class="theme-btn {'active' if config.theme == 'github-dark' else ''}"
-                  id="btn-github-dark" onclick="selectTheme('github-dark')">GitHub Dark</button>
-          <button class="theme-btn {'active' if config.theme == 'amoled' else ''}"
-                  id="btn-amoled" onclick="selectTheme('amoled')">AMOLED</button>
+        <select class="label-select" id="theme-select" onchange="selectTheme(this.value)">
+          {theme_options}
+        </select>
+      </div>
+
+      <div>
+        <div class="section-label">Card label</div>
+        <select class="label-select" id="label-select" onchange="onLabelSelect(this.value)">
+          <option value="Currently Reading">Currently Reading</option>
+          <option value="Now Reading">Now Reading</option>
+          <option value="Reading">Reading</option>
+          <option value="Listening To">Listening To</option>
+          <option value="Now Listening">Now Listening</option>
+          <option value="Currently Listening">Currently Listening</option>
+          <option value="__custom__">Custom…</option>
+        </select>
+        <div class="label-custom" id="label-custom-wrap">
+          <input class="label-input" id="label-input" type="text"
+                 placeholder="Enter custom label"
+                 oninput="onLabelInput(this.value)">
         </div>
       </div>
     </div>
@@ -425,10 +387,42 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
   <script>
     const DEMO_URLS = {demo_urls_js};
 
+    const LABEL_PRESETS = [
+      "Currently Reading", "Now Reading", "Reading",
+      "Listening To", "Now Listening", "Currently Listening",
+    ];
+
     let currentLayout = "{config.layout}";
     let currentTheme  = "{config.theme}";
     let currentLabel  = "{config.label}";
     let labelDebounce = null;
+
+    function initLabel() {{
+      const sel = document.getElementById("label-select");
+      const inp = document.getElementById("label-input");
+      const wrap = document.getElementById("label-custom-wrap");
+      if (LABEL_PRESETS.includes(currentLabel)) {{
+        sel.value = currentLabel;
+      }} else {{
+        sel.value = "__custom__";
+        inp.value = currentLabel;
+        wrap.classList.add("visible");
+      }}
+    }}
+
+    function onLabelSelect(val) {{
+      const wrap = document.getElementById("label-custom-wrap");
+      if (val === "__custom__") {{
+        wrap.classList.add("visible");
+        const inp = document.getElementById("label-input");
+        currentLabel = inp.value;
+        inp.focus();
+      }} else {{
+        wrap.classList.remove("visible");
+        currentLabel = val;
+        updatePreview();
+      }}
+    }}
 
     function updatePreview() {{
       const img = document.getElementById("preview-img");
@@ -455,19 +449,11 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
 
     function selectLayout(key) {{
       currentLayout = key;
-      document.querySelectorAll(".layout-option").forEach(el => {{
-        el.classList.toggle("selected", el.dataset.layout === key);
-      }});
       updatePreview();
     }}
 
-    const THEMES = ["dark", "light", "github-dark", "amoled"];
-
     function selectTheme(t) {{
       currentTheme = t;
-      THEMES.forEach(k => {{
-        document.getElementById("btn-" + k).classList.toggle("active", k === t);
-      }});
       updatePreview();
     }}
 
@@ -511,6 +497,7 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
     }}
 
     // Initial render
+    initLabel();
     updatePreview();
   </script>
 </body>

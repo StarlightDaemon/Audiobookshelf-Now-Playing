@@ -833,3 +833,262 @@ def render_portrait_e_nothing(theme: Theme) -> str:
 
 def render_portrait_e_error(theme: Theme) -> str:
     return _pt_status_card(theme, "Unable to reach Audiobookshelf")
+
+
+# ── Layout F — Slim Bookmark (150×460) ───────────────────────────────────────
+#
+#  ┌─────────────┐
+#  │      ●      │  ← decorative hole
+#  │  ┌───────┐  │
+#  │  │ cover │  │
+#  │  └───────┘  │
+#  ├─────────────┤
+#  │ Currently   │
+#  │ Reading     │
+#  │ Project     │
+#  │ Hail Mary   │
+#  │ Andy Weir   │
+#  │ ██████░     │
+#  │             │
+#  └──────┬──────┘
+#          ▼  V-notch
+
+_PF_W        = 150
+_PF_H        = 460
+_PF_NOTCH    = 26
+_PF_PAD      = 14
+_PF_COVER_SZ = 120
+_PF_RX       = 10
+_PF_HOLE_R   = 6
+
+
+def _pf_bm_path(w: int, h: int, notch: int, rx: int) -> str:
+    return (
+        f'M {rx},0 L {w-rx},0 Q {w},0 {w},{rx} '
+        f'L {w},{h-notch} L {w//2},{h} L 0,{h-notch} '
+        f'L 0,{rx} Q 0,0 {rx},0 Z'
+    )
+
+
+def _pf_status_card(theme: Theme, message: str) -> str:
+    w, h = _PF_W, _PF_H
+    p = _pf_bm_path(w, h, _PF_NOTCH, _PF_RX)
+    return (
+        f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg">\n'
+        f'  <path d="{p}" fill="{theme.background}" stroke="{theme.border}" stroke-width="1"/>\n'
+        f'  <text x="{w//2}" y="{h//2}" font-family="{_FONT}" font-size="10"'
+        f' fill="{theme.text_secondary}" text-anchor="middle">{_x(message)}</text>\n'
+        f'</svg>'
+    )
+
+
+def render_portrait_f(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
+    w, h    = _PF_W, _PF_H
+    pad     = _PF_PAD
+    notch   = _PF_NOTCH
+    cov_sz  = _PF_COVER_SZ
+
+    bm_path = _pf_bm_path(w, h, notch, _PF_RX)
+
+    hole_cx = w // 2
+    hole_cy = 18
+    cov_x   = pad
+    cov_y   = hole_cy + _PF_HOLE_R + 8   # 32
+    div_y   = cov_y + cov_sz + 8         # 160
+
+    title_lines = _word_wrap(data.title, 14)[:2]
+    lines: list[tuple[int, bool, str]] = [(9, False, _x(label))]
+    for tl in title_lines:
+        lines.append((13, True, _x(tl)))
+    lines.append((11, False, _x(_trunc(data.author, 16))))
+    if data.narrator:
+        lines.append((10, False, _x(_trunc(data.narrator, 17))))
+    pubyr_parts = [p for p in [data.publisher, data.year] if p]
+    if pubyr_parts:
+        lines.append((10, False, _x(_trunc(" · ".join(pubyr_parts), 17))))
+    if data.series:
+        lines.append((10, False, _x(_trunc(data.series, 17))))
+
+    y = div_y + 16
+    text_els = ""
+    for size, bold, content in lines:
+        weight = ' font-weight="600"' if bold else ""
+        color  = theme.text_primary if bold else theme.text_secondary
+        text_els += (
+            f'  <text x="{pad}" y="{y}" font-family="{_FONT}"'
+            f' font-size="{size}"{weight} fill="{color}">{content}</text>\n'
+        )
+        y += size + 5
+
+    bar_y = h - notch - 20
+    bar   = _progress_bar(pad, bar_y, w - 2 * pad, data.progress, theme, show_pct=False)
+
+    divider = (
+        f'  <line x1="{pad}" y1="{div_y}" x2="{w - pad}" y2="{div_y}"'
+        f' stroke="{theme.border}" stroke-width="1"/>\n'
+    )
+
+    return (
+        f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg"'
+        f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
+        f'  <path d="{bm_path}" fill="{theme.background}"'
+        f' stroke="{theme.border}" stroke-width="1"/>\n'
+        f'  {_cover(cov_x, cov_y, cov_sz, cov_sz, data.cover_b64, theme, clip_id="fcc")}\n'
+        f'{divider}'
+        f'{text_els}'
+        f'  <circle cx="{hole_cx}" cy="{hole_cy}" r="{_PF_HOLE_R}"'
+        f' fill="{theme.background}" stroke="{theme.border}" stroke-width="1.5"/>\n'
+        f'  {bar}\n'
+        f'</svg>'
+    )
+
+
+def render_portrait_f_demo(theme: Theme, label: Optional[str] = None) -> str:
+    return render_portrait_f(theme, _DEMO_DATA, label=label or "Currently Reading")
+
+
+def render_portrait_f_nothing(theme: Theme) -> str:
+    return _pf_status_card(theme, "No listening history yet")
+
+
+def render_portrait_f_error(theme: Theme) -> str:
+    return _pf_status_card(theme, "Unable to reach Audiobookshelf")
+
+
+# ── Layout G — Dog-ear Corner (220×300) ──────────────────────────────────────
+#
+#  ┌──────────────────────────────────┐
+#  │ [cover ]  Currently Reading      │
+#  │  80×80    Project Hail Mary      │
+#  │           Andy Weir              │
+#  ├──────────────────────────────────┤
+#  │ Narrated by Ray Porter           │
+#  │ Ballantine Books · 2021          │
+#  │ The Weir Trilogy · Book 2        │
+#  │                                  │
+#  │ ████████████████░░░              │
+#  │                                  │
+#  └──────────────────────────────────/
+#                                    \  ← folded corner
+
+_PG_W    = 220
+_PG_H    = 300
+_PG_FOLD = 40
+_PG_PAD  = 16
+_PG_RX   = 10
+
+
+def _pg_card_path(w: int, h: int, fold: int, rx: int) -> str:
+    return (
+        f'M {rx},0 L {w-rx},0 Q {w},0 {w},{rx} '
+        f'L {w},{h-fold} L {w-fold},{h} '
+        f'L {rx},{h} Q 0,{h} 0,{h-rx} '
+        f'L 0,{rx} Q 0,0 {rx},0 Z'
+    )
+
+
+def _pg_flap_path(w: int, h: int, fold: int) -> str:
+    return f'M {w},{h-fold} L {w-fold},{h} L {w},{h} Z'
+
+
+def _pg_status_card(theme: Theme, message: str) -> str:
+    w, h = _PG_W, _PG_H
+    cp = _pg_card_path(w, h, _PG_FOLD, _PG_RX)
+    return (
+        f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg">\n'
+        f'  <path d="{cp}" fill="{theme.background}" stroke="{theme.border}" stroke-width="1"/>\n'
+        f'  <path d="{_pg_flap_path(w, h, _PG_FOLD)}" fill="{theme.border}" opacity="0.7"/>\n'
+        f'  <text x="{w//2}" y="{h//2}" font-family="{_FONT}" font-size="11"'
+        f' fill="{theme.text_secondary}" text-anchor="middle">{_x(message)}</text>\n'
+        f'</svg>'
+    )
+
+
+def render_portrait_g(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
+    w, h  = _PG_W, _PG_H
+    pad   = _PG_PAD
+    fold  = _PG_FOLD
+
+    card_path = _pg_card_path(w, h, fold, _PG_RX)
+    flap_path = _pg_flap_path(w, h, fold)
+
+    cov_sz = 80
+    cov_x, cov_y = pad, pad
+
+    txt_x   = cov_x + cov_sz + 10    # 106
+    txt_w   = w - txt_x - pad        # 98 — chars ≈ 11 at 9px, 9 at 12px
+
+    title_lines = _word_wrap(data.title, 10)[:2]
+
+    y_label  = cov_y + 14
+    y_title1 = y_label + 9 + 4
+    y_title2 = y_title1 + 12 + 3
+    has_t2   = len(title_lines) > 1
+    y_author = (y_title2 if has_t2 else y_title1) + 12 + 4
+
+    div_y = cov_y + cov_sz + 10      # 106
+
+    below_lines: list[str] = []
+    if data.narrator:
+        below_lines.append(_x(_trunc(data.narrator, 26)))
+    pubyr_parts = [p for p in [data.publisher, data.year] if p]
+    if pubyr_parts:
+        below_lines.append(_x(_trunc(" · ".join(pubyr_parts), 26)))
+    if data.series:
+        below_lines.append(_x(_trunc(data.series, 26)))
+
+    y = div_y + 16
+    below_els = ""
+    for content in below_lines:
+        below_els += (
+            f'  <text x="{pad}" y="{y}" font-family="{_FONT}"'
+            f' font-size="10" fill="{theme.text_secondary}">{content}</text>\n'
+        )
+        y += 15
+
+    bar_y = h - fold - 20            # 240 — safely above the fold diagonal
+    bar   = _progress_bar(pad, bar_y, w - 2 * pad, data.progress, theme, show_pct=False)
+
+    divider = (
+        f'  <line x1="{pad}" y1="{div_y}" x2="{w - pad - fold // 2}" y2="{div_y}"'
+        f' stroke="{theme.border}" stroke-width="1"/>\n'
+    )
+
+    return (
+        f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg"'
+        f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
+        f'  <path d="{card_path}" fill="{theme.background}"'
+        f' stroke="{theme.border}" stroke-width="1"/>\n'
+        f'  <path d="{flap_path}" fill="{theme.border}" opacity="0.7"/>\n'
+        f'  {_cover(cov_x, cov_y, cov_sz, cov_sz, data.cover_b64, theme, clip_id="gcc")}\n'
+        f'  <text x="{txt_x}" y="{y_label}" font-family="{_FONT}"'
+        f' font-size="9" fill="{theme.text_secondary}">{_x(label)}</text>\n'
+        f'  <text x="{txt_x}" y="{y_title1}" font-family="{_FONT}"'
+        f' font-size="12" font-weight="600" fill="{theme.text_primary}">'
+        f'{_x(title_lines[0])}</text>\n'
+        + (
+            f'  <text x="{txt_x}" y="{y_title2}" font-family="{_FONT}"'
+            f' font-size="12" font-weight="600" fill="{theme.text_primary}">'
+            f'{_x(title_lines[1])}</text>\n'
+            if has_t2 else ""
+        ) +
+        f'  <text x="{txt_x}" y="{y_author}" font-family="{_FONT}"'
+        f' font-size="10" fill="{theme.text_secondary}">'
+        f'{_x(_trunc(data.author, 11))}</text>\n'
+        f'{divider}'
+        f'{below_els}'
+        f'  {bar}\n'
+        f'</svg>'
+    )
+
+
+def render_portrait_g_demo(theme: Theme, label: Optional[str] = None) -> str:
+    return render_portrait_g(theme, _DEMO_DATA, label=label or "Currently Reading")
+
+
+def render_portrait_g_nothing(theme: Theme) -> str:
+    return _pg_status_card(theme, "No listening history yet")
+
+
+def render_portrait_g_error(theme: Theme) -> str:
+    return _pg_status_card(theme, "Unable to reach Audiobookshelf")

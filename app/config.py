@@ -13,8 +13,9 @@ _CONFIG_PATH = os.environ.get(
 VALID_LAYOUTS = {
     "landscape", "portrait", "portrait-b",
     "portrait-c", "portrait-d", "portrait-e",
+    "portrait-f", "portrait-g",
 }
-VALID_THEMES = {"dark", "light", "github-dark", "amoled"}
+VALID_THEMES = {"dark", "light", "github-dark", "amoled", "parchment", "kraft"}
 
 
 @dataclass
