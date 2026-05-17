@@ -11,10 +11,9 @@ _CONFIG_PATH = os.environ.get(
 )
 
 VALID_LAYOUTS = {
-    "landscape", "landscape-c", "landscape-d",
-    "portrait", "portrait-b",
-    "portrait-c", "portrait-d", "portrait-e",
-    "portrait-f", "portrait-g",
+    "landscape-classic", "landscape-compact", "landscape-editorial",
+    "portrait-cover", "portrait-frosted", "portrait-stripe",
+    "portrait-typeset", "portrait-bookmark", "portrait-dogear",
 }
 VALID_THEMES = {"light", "github-dark", "parchment", "kraft"}
 VALID_CORNERS = {"rounded", "square"}
@@ -22,7 +21,7 @@ VALID_CORNERS = {"rounded", "square"}
 
 @dataclass
 class AppConfig:
-    layout: str = "landscape"
+    layout: str = "landscape-classic"
     theme: str = "github-dark"
     label: str = "Currently Reading"
     corners: str = "rounded"
@@ -37,7 +36,7 @@ def load_config() -> AppConfig:
         label = data.get("label", "Currently Reading")
         corners = data.get("corners", "rounded")
         if layout not in VALID_LAYOUTS:
-            layout = "landscape"
+            layout = "landscape-classic"
         if theme not in VALID_THEMES:
             theme = "github-dark"
         if not isinstance(label, str) or not label.strip():

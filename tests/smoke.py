@@ -13,30 +13,28 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.render import (
-    render_landscape_demo,
-    render_landscape_c_demo,
-    render_landscape_d_demo,
-    render_portrait_demo,
-    render_portrait_b_demo,
-    render_portrait_c_demo,
-    render_portrait_d_demo,
-    render_portrait_e_demo,
-    render_portrait_f_demo,
-    render_portrait_g_demo,
+    render_landscape_classic_demo,
+    render_landscape_compact_demo,
+    render_landscape_editorial_demo,
+    render_portrait_cover_demo,
+    render_portrait_frosted_demo,
+    render_portrait_stripe_demo,
+    render_portrait_typeset_demo,
+    render_portrait_bookmark_demo,
+    render_portrait_dogear_demo,
 )
 from app.themes import THEMES
 
 RENDERERS = [
-    ("render_landscape_demo",   render_landscape_demo),
-    ("render_landscape_c_demo", render_landscape_c_demo),
-    ("render_landscape_d_demo", render_landscape_d_demo),
-    ("render_portrait_demo",    render_portrait_demo),
-    ("render_portrait_b_demo",  render_portrait_b_demo),
-    ("render_portrait_c_demo",  render_portrait_c_demo),
-    ("render_portrait_d_demo",  render_portrait_d_demo),
-    ("render_portrait_e_demo",  render_portrait_e_demo),
-    ("render_portrait_f_demo",  render_portrait_f_demo),
-    ("render_portrait_g_demo",  render_portrait_g_demo),
+    ("render_landscape_classic_demo",   render_landscape_classic_demo),
+    ("render_landscape_compact_demo",   render_landscape_compact_demo),
+    ("render_landscape_editorial_demo", render_landscape_editorial_demo),
+    ("render_portrait_cover_demo",      render_portrait_cover_demo),
+    ("render_portrait_frosted_demo",    render_portrait_frosted_demo),
+    ("render_portrait_stripe_demo",     render_portrait_stripe_demo),
+    ("render_portrait_typeset_demo",    render_portrait_typeset_demo),
+    ("render_portrait_bookmark_demo",   render_portrait_bookmark_demo),
+    ("render_portrait_dogear_demo",     render_portrait_dogear_demo),
 ]
 
 

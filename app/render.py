@@ -159,7 +159,7 @@ _LS_SEP_X = 355
 _LS_META_X = 372
 
 
-def render_landscape(theme: Theme, data: CardData, label: str = "Currently Reading",
+def render_landscape_classic(theme: Theme, data: CardData, label: str = "Currently Reading",
                      corners: str = "rounded") -> str:
     card_rx = 0 if corners == "square" else 10
     # Primary zone — evenly distributed across full card height (content area y=20..140)
@@ -229,21 +229,21 @@ def _ls_status_card(theme: Theme, message: str) -> str:
     )
 
 
-def render_landscape_demo(theme: Theme, label: Optional[str] = None,
+def render_landscape_classic_demo(theme: Theme, label: Optional[str] = None,
                           corners: str = "rounded") -> str:
-    return render_landscape(theme, _DEMO_DATA, corners=corners,
+    return render_landscape_classic(theme, _DEMO_DATA, corners=corners,
                             label=label or "Demo — configure credentials to go live")
 
 
-def render_landscape_standalone_demo(theme: Theme) -> str:
-    return render_landscape(theme, _DEMO_DATA_STANDALONE, label="Demo — standalone book")
+def render_landscape_classic_standalone_demo(theme: Theme) -> str:
+    return render_landscape_classic(theme, _DEMO_DATA_STANDALONE, label="Demo — standalone book")
 
 
-def render_landscape_nothing_playing(theme: Theme) -> str:
+def render_landscape_classic_nothing(theme: Theme) -> str:
     return _ls_status_card(theme, "No listening history yet")
 
 
-def render_landscape_error(theme: Theme) -> str:
+def render_landscape_classic_error(theme: Theme) -> str:
     return _ls_status_card(theme, "Unable to reach Audiobookshelf")
 
 
@@ -271,7 +271,7 @@ def _lc_status_card(theme: Theme, message: str) -> str:
     )
 
 
-def render_landscape_c(theme: Theme, data: CardData, label: str = "Currently Reading",
+def render_landscape_compact(theme: Theme, data: CardData, label: str = "Currently Reading",
                        corners: str = "rounded") -> str:
     w, h    = _LC_W, _LC_H
     pad     = _LC_PAD
@@ -304,17 +304,17 @@ def render_landscape_c(theme: Theme, data: CardData, label: str = "Currently Rea
     )
 
 
-def render_landscape_c_demo(theme: Theme, label: Optional[str] = None,
+def render_landscape_compact_demo(theme: Theme, label: Optional[str] = None,
                              corners: str = "rounded") -> str:
-    return render_landscape_c(theme, _DEMO_DATA, corners=corners,
+    return render_landscape_compact(theme, _DEMO_DATA, corners=corners,
                               label=label or "Currently Reading")
 
 
-def render_landscape_c_nothing(theme: Theme) -> str:
+def render_landscape_compact_nothing(theme: Theme) -> str:
     return _lc_status_card(theme, "No listening history yet")
 
 
-def render_landscape_c_error(theme: Theme) -> str:
+def render_landscape_compact_error(theme: Theme) -> str:
     return _lc_status_card(theme, "Unable to reach Audiobookshelf")
 
 
@@ -352,7 +352,7 @@ def _ld_status_card(theme: Theme, message: str) -> str:
     )
 
 
-def render_landscape_d(theme: Theme, data: CardData, label: str = "Currently Reading",
+def render_landscape_editorial(theme: Theme, data: CardData, label: str = "Currently Reading",
                        corners: str = "rounded") -> str:
     w, h    = _LD_W, _LD_H
     pad     = _LD_PAD
@@ -426,17 +426,17 @@ def render_landscape_d(theme: Theme, data: CardData, label: str = "Currently Rea
     )
 
 
-def render_landscape_d_demo(theme: Theme, label: Optional[str] = None,
+def render_landscape_editorial_demo(theme: Theme, label: Optional[str] = None,
                              corners: str = "rounded") -> str:
-    return render_landscape_d(theme, _DEMO_DATA, corners=corners,
+    return render_landscape_editorial(theme, _DEMO_DATA, corners=corners,
                               label=label or "Currently Reading")
 
 
-def render_landscape_d_nothing(theme: Theme) -> str:
+def render_landscape_editorial_nothing(theme: Theme) -> str:
     return _ld_status_card(theme, "No listening history yet")
 
 
-def render_landscape_d_error(theme: Theme) -> str:
+def render_landscape_editorial_error(theme: Theme) -> str:
     return _ld_status_card(theme, "Unable to reach Audiobookshelf")
 
 
@@ -466,7 +466,7 @@ _PT_COVER_Y = _PT_PAD
 _PT_DIV_Y   = _PT_COVER_Y + _PT_COVER_H + 8   # 232
 
 
-def render_portrait(theme: Theme, data: CardData, label: str = "Currently Reading",
+def render_portrait_cover(theme: Theme, data: CardData, label: str = "Currently Reading",
                     corners: str = "rounded") -> str:
     card_rx = 0 if corners == "square" else 10
     title  = _x(_trunc(data.title, 22))
@@ -528,135 +528,19 @@ def _pt_status_card(theme: Theme, message: str) -> str:
     )
 
 
-def render_portrait_demo(theme: Theme, label: Optional[str] = None,
+def render_portrait_cover_demo(theme: Theme, label: Optional[str] = None,
                          corners: str = "rounded") -> str:
-    return render_portrait(theme, _DEMO_DATA, corners=corners,
+    return render_portrait_cover(theme, _DEMO_DATA, corners=corners,
                            label=label or "Demo — configure credentials")
 
 
-def render_portrait_nothing_playing(theme: Theme) -> str:
+def render_portrait_cover_nothing(theme: Theme) -> str:
     return _pt_status_card(theme, "No listening history yet")
 
 
-def render_portrait_error(theme: Theme) -> str:
+def render_portrait_cover_error(theme: Theme) -> str:
     return _pt_status_card(theme, "Unable to reach Audiobookshelf")
 
-
-# ── Layout B — Full-bleed cover + gradient overlay (240×360) ─────────────────
-#
-#  ┌──────────────────────────┐
-#  │                          │
-#  │   [cover fills card,     │
-#  │    fades to dark at      │
-#  │    bottom 40%]           │
-#  │                          │
-#  │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│ ← gradient starts
-#  │  Currently Reading       │
-#  │  Project Hail Mary       │
-#  │  Andy Weir               │
-#  │  Narrated by Ray Porter  │
-#  └──────────────────────────┘
-
-def render_portrait_b(theme: Theme, data: CardData, label: str = "Currently Reading",
-                      corners: str = "rounded") -> str:
-    w, h = _PT_W, _PT_H
-    pad  = _PT_PAD
-    card_rx = 0 if corners == "square" else 10
-
-    # Text lines (bottom section, starting ~y=220)
-    title  = _x(_trunc(data.title,  22))
-    author = _x(_trunc(data.author, 24))
-    lines: list[tuple[int, bool, str]] = [
-        (10, False, _x(label)),
-        (15, True,  title),
-        (12, False, author),
-    ]
-    if data.narrator:
-        lines.append((11, False, f'Narrated by {_x(_trunc(data.narrator, 20))}'))
-    if data.series:
-        lines.append((11, False, _x(_trunc(data.series, 26))))
-
-    # Pin text block to bottom, grow upward
-    line_gap = 6
-    block_h = sum(s + line_gap for s, _, _ in lines)
-    y_start = h - pad - block_h + lines[0][0]
-
-    has_cover = bool(data.cover_b64)
-    text_els = ""
-    y = y_start
-    for size, bold, content in lines:
-        weight = ' font-weight="600"' if bold else ""
-        muted  = content == "Standalone"
-        if has_cover:
-            color      = "#ffffff"
-            fill_extra = "" if bold else ' fill-opacity="0.75"'
-        else:
-            color      = theme.text_primary if bold else theme.text_secondary
-            fill_extra = ""
-        italic = ' font-style="italic"' if muted else ""
-        text_els += (
-            f'  <text x="{pad}" y="{y}" font-family="{_FONT}"'
-            f' font-size="{size}"{weight} fill="{color}"{fill_extra}{italic}>{content}</text>\n'
-        )
-        y += size + line_gap
-
-    # Gradient: transparent → theme.background, covering bottom 55% of card
-    grad_y_pct = "45%"
-    defs = (
-        f'<defs>'
-        f'<clipPath id="bcc"><rect width="{w}" height="{h}" rx="{card_rx}"/></clipPath>'
-        f'<linearGradient id="bgrad" x1="0" y1="0" x2="0" y2="1">'
-        f'<stop offset="{grad_y_pct}" stop-color="{theme.background}" stop-opacity="0"/>'
-        f'<stop offset="100%" stop-color="{theme.background}" stop-opacity="1"/>'
-        f'</linearGradient>'
-        f'</defs>'
-    )
-
-    if data.cover_b64:
-        cover_el = (
-            f'  <image href="{data.cover_b64}" x="0" y="0" width="{w}" height="{h}"'
-            f' clip-path="url(#bcc)" preserveAspectRatio="xMidYMid slice"/>\n'
-        )
-        icon_el = ""
-    else:
-        # No cover — accent-tinted background, icon anchored just above text block
-        cover_el = (
-            f'  <rect width="{w}" height="{h}" fill="{theme.accent}" opacity="0.15"/>\n'
-        )
-        icon_y = y_start - 14
-        icon_el = (
-            f'  <text x="{w // 2}" y="{icon_y}" font-size="48" text-anchor="middle"'
-            f' font-family="serif" fill="{theme.text_secondary}">&#128214;</text>\n'
-        )
-
-    bar = _progress_bar(pad, h - 12, w - 2 * pad, data.progress, theme, show_pct=False)
-
-    return (
-        f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg"'
-        f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
-        f'  {defs}\n'
-        f'  {_bg(w, h, theme, rx=card_rx)}\n'
-        f'{cover_el}'
-        f'  <rect width="{w}" height="{h}" clip-path="url(#bcc)" fill="url(#bgrad)"/>\n'
-        f'{icon_el}'
-        f'{text_els}'
-        f'  {bar}\n'
-        f'</svg>'
-    )
-
-
-def render_portrait_b_demo(theme: Theme, label: Optional[str] = None,
-                           corners: str = "rounded") -> str:
-    return render_portrait_b(theme, _DEMO_DATA, corners=corners,
-                             label=label or "Demo — configure credentials")
-
-
-def render_portrait_b_nothing(theme: Theme) -> str:
-    return _pt_status_card(theme, "No listening history yet")
-
-
-def render_portrait_b_error(theme: Theme) -> str:
-    return _pt_status_card(theme, "Unable to reach Audiobookshelf")
 
 
 # ── Layout C — Frosted glass panel (240×360) ──────────────────────────────────
@@ -675,7 +559,7 @@ def render_portrait_b_error(theme: Theme) -> str:
 #  │                          │
 #  └──────────────────────────┘
 
-def render_portrait_c(theme: Theme, data: CardData, label: str = "Currently Reading",
+def render_portrait_frosted(theme: Theme, data: CardData, label: str = "Currently Reading",
                       corners: str = "rounded") -> str:
     w, h   = _PT_W, _PT_H
     pad    = _PT_PAD
@@ -759,17 +643,17 @@ def render_portrait_c(theme: Theme, data: CardData, label: str = "Currently Read
     )
 
 
-def render_portrait_c_demo(theme: Theme, label: Optional[str] = None,
+def render_portrait_frosted_demo(theme: Theme, label: Optional[str] = None,
                            corners: str = "rounded") -> str:
-    return render_portrait_c(theme, _DEMO_DATA, corners=corners,
+    return render_portrait_frosted(theme, _DEMO_DATA, corners=corners,
                              label=label or "Demo — configure credentials")
 
 
-def render_portrait_c_nothing(theme: Theme) -> str:
+def render_portrait_frosted_nothing(theme: Theme) -> str:
     return _pt_status_card(theme, "No listening history yet")
 
 
-def render_portrait_c_error(theme: Theme) -> str:
+def render_portrait_frosted_error(theme: Theme) -> str:
     return _pt_status_card(theme, "Unable to reach Audiobookshelf")
 
 
@@ -789,7 +673,7 @@ def render_portrait_c_error(theme: Theme) -> str:
 
 _D_STRIPE_W = 6
 
-def render_portrait_d(theme: Theme, data: CardData, label: str = "Currently Reading",
+def render_portrait_stripe(theme: Theme, data: CardData, label: str = "Currently Reading",
                       corners: str = "rounded") -> str:
     w, h      = _PT_W, _PT_H
     pad       = _PT_PAD
@@ -882,17 +766,17 @@ def render_portrait_d(theme: Theme, data: CardData, label: str = "Currently Read
     )
 
 
-def render_portrait_d_demo(theme: Theme, label: Optional[str] = None,
+def render_portrait_stripe_demo(theme: Theme, label: Optional[str] = None,
                            corners: str = "rounded") -> str:
-    return render_portrait_d(theme, _DEMO_DATA, corners=corners,
+    return render_portrait_stripe(theme, _DEMO_DATA, corners=corners,
                              label=label or "Demo — configure credentials")
 
 
-def render_portrait_d_nothing(theme: Theme) -> str:
+def render_portrait_stripe_nothing(theme: Theme) -> str:
     return _pt_status_card(theme, "No listening history yet")
 
 
-def render_portrait_d_error(theme: Theme) -> str:
+def render_portrait_stripe_error(theme: Theme) -> str:
     return _pt_status_card(theme, "Unable to reach Audiobookshelf")
 
 
@@ -935,7 +819,7 @@ def _word_wrap(text: str, max_chars: int) -> list[str]:
     return lines or [""]
 
 
-def render_portrait_e(theme: Theme, data: CardData, label: str = "Currently Reading",
+def render_portrait_typeset(theme: Theme, data: CardData, label: str = "Currently Reading",
                       corners: str = "rounded") -> str:
     w, h  = _PT_W, _PT_H
     pad   = _PT_PAD
@@ -1018,17 +902,17 @@ def render_portrait_e(theme: Theme, data: CardData, label: str = "Currently Read
     )
 
 
-def render_portrait_e_demo(theme: Theme, label: Optional[str] = None,
+def render_portrait_typeset_demo(theme: Theme, label: Optional[str] = None,
                            corners: str = "rounded") -> str:
-    return render_portrait_e(theme, _DEMO_DATA, corners=corners,
+    return render_portrait_typeset(theme, _DEMO_DATA, corners=corners,
                              label=label or "Currently Reading")
 
 
-def render_portrait_e_nothing(theme: Theme) -> str:
+def render_portrait_typeset_nothing(theme: Theme) -> str:
     return _pt_status_card(theme, "No listening history yet")
 
 
-def render_portrait_e_error(theme: Theme) -> str:
+def render_portrait_typeset_error(theme: Theme) -> str:
     return _pt_status_card(theme, "Unable to reach Audiobookshelf")
 
 
@@ -1079,7 +963,7 @@ def _pf_status_card(theme: Theme, message: str) -> str:
     )
 
 
-def render_portrait_f(theme: Theme, data: CardData, label: str = "Currently Reading",
+def render_portrait_bookmark(theme: Theme, data: CardData, label: str = "Currently Reading",
                       corners: str = "rounded") -> str:
     w, h    = _PF_W, _PF_H
     pad     = _PF_PAD
@@ -1135,17 +1019,17 @@ def render_portrait_f(theme: Theme, data: CardData, label: str = "Currently Read
     )
 
 
-def render_portrait_f_demo(theme: Theme, label: Optional[str] = None,
+def render_portrait_bookmark_demo(theme: Theme, label: Optional[str] = None,
                            corners: str = "rounded") -> str:
-    return render_portrait_f(theme, _DEMO_DATA, corners=corners,
+    return render_portrait_bookmark(theme, _DEMO_DATA, corners=corners,
                              label=label or "Currently Reading")
 
 
-def render_portrait_f_nothing(theme: Theme) -> str:
+def render_portrait_bookmark_nothing(theme: Theme) -> str:
     return _pf_status_card(theme, "No listening history yet")
 
 
-def render_portrait_f_error(theme: Theme) -> str:
+def render_portrait_bookmark_error(theme: Theme) -> str:
     return _pf_status_card(theme, "Unable to reach Audiobookshelf")
 
 
@@ -1198,7 +1082,7 @@ def _pg_status_card(theme: Theme, message: str) -> str:
     )
 
 
-def render_portrait_g(theme: Theme, data: CardData, label: str = "Currently Reading",
+def render_portrait_dogear(theme: Theme, data: CardData, label: str = "Currently Reading",
                       corners: str = "rounded") -> str:
     w, h  = _PG_W, _PG_H
     pad   = _PG_PAD
@@ -1275,15 +1159,15 @@ def render_portrait_g(theme: Theme, data: CardData, label: str = "Currently Read
     )
 
 
-def render_portrait_g_demo(theme: Theme, label: Optional[str] = None,
+def render_portrait_dogear_demo(theme: Theme, label: Optional[str] = None,
                            corners: str = "rounded") -> str:
-    return render_portrait_g(theme, _DEMO_DATA, corners=corners,
+    return render_portrait_dogear(theme, _DEMO_DATA, corners=corners,
                              label=label or "Currently Reading")
 
 
-def render_portrait_g_nothing(theme: Theme) -> str:
+def render_portrait_dogear_nothing(theme: Theme) -> str:
     return _pg_status_card(theme, "No listening history yet")
 
 
-def render_portrait_g_error(theme: Theme) -> str:
+def render_portrait_dogear_error(theme: Theme) -> str:
     return _pg_status_card(theme, "Unable to reach Audiobookshelf")

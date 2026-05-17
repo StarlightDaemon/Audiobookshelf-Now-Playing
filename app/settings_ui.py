@@ -2,16 +2,15 @@ from .config import AppConfig
 from .fujin_tokens import load_dark_tokens
 
 _LAYOUTS = [
-    ("landscape",   "Landscape",          "600 × 160"),
-    ("landscape-c", "Landscape Compact",  "600 × 80"),
-    ("landscape-d", "Landscape Editorial","600 × 200"),
-    ("portrait",    "Portrait A",         "240 × 360"),
-    ("portrait-b", "Portrait B", "240 × 360"),
-    ("portrait-c", "Portrait C", "240 × 360"),
-    ("portrait-d", "Portrait D", "240 × 360"),
-    ("portrait-e", "Portrait E", "240 × 360"),
-    ("portrait-f", "Bookmark",   "165 × 460"),
-    ("portrait-g", "Dog-ear",    "220 × 300"),
+    ("landscape-classic",   "Classic",    "600 × 160"),
+    ("landscape-compact",   "Compact",    "600 × 80"),
+    ("landscape-editorial", "Editorial",  "600 × 200"),
+    ("portrait-cover",      "Cover",      "240 × 360"),
+    ("portrait-frosted",    "Frosted",    "240 × 360"),
+    ("portrait-stripe",     "Stripe",     "240 × 360"),
+    ("portrait-typeset",    "Typeset",    "240 × 360"),
+    ("portrait-bookmark",   "Bookmark",   "165 × 460"),
+    ("portrait-dogear",     "Dog-ear",    "220 × 300"),
 ]
 
 _THEMES = [
@@ -27,16 +26,15 @@ _CORNERS = [
 ]
 
 _DEMO_URLS = {
-    "landscape":   "/cardlandscapedemo",
-    "landscape-c": "/cardlandscapecdemo",
-    "landscape-d": "/cardlandscapeddemo",
-    "portrait":    "/cardportraitdemo",
-    "portrait-b": "/cardportraitbdemo",
-    "portrait-c": "/cardportraitcdemo",
-    "portrait-d": "/cardportraitddemo",
-    "portrait-e": "/cardportraitedemo",
-    "portrait-f": "/cardportraitfdemo",
-    "portrait-g": "/cardportraitgdemo",
+    "landscape-classic":   "/cardlandscapedemo",
+    "landscape-compact":   "/cardlandscapecdemo",
+    "landscape-editorial": "/cardlandscapeddemo",
+    "portrait-cover":      "/cardportraitdemo",
+    "portrait-frosted":    "/cardportraitcdemo",
+    "portrait-stripe":     "/cardportraitddemo",
+    "portrait-typeset":    "/cardportraitedemo",
+    "portrait-bookmark":   "/cardportraitfdemo",
+    "portrait-dogear":     "/cardportraitgdemo",
 }
 
 

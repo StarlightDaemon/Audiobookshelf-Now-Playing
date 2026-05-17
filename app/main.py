@@ -11,17 +11,16 @@ from .cache import TTLCache
 from .config import AppConfig, load_config, save_config
 from .render import (
     CardData,
-    render_landscape, render_landscape_demo, render_landscape_standalone_demo,
-    render_landscape_error, render_landscape_nothing_playing,
-    render_landscape_c, render_landscape_c_demo, render_landscape_c_nothing, render_landscape_c_error,
-    render_landscape_d, render_landscape_d_demo, render_landscape_d_nothing, render_landscape_d_error,
-    render_portrait, render_portrait_demo, render_portrait_error, render_portrait_nothing_playing,
-    render_portrait_b, render_portrait_b_demo, render_portrait_b_nothing, render_portrait_b_error,
-    render_portrait_c, render_portrait_c_demo, render_portrait_c_nothing, render_portrait_c_error,
-    render_portrait_d, render_portrait_d_demo, render_portrait_d_nothing, render_portrait_d_error,
-    render_portrait_e, render_portrait_e_demo, render_portrait_e_nothing, render_portrait_e_error,
-    render_portrait_f, render_portrait_f_demo, render_portrait_f_nothing, render_portrait_f_error,
-    render_portrait_g, render_portrait_g_demo, render_portrait_g_nothing, render_portrait_g_error,
+    render_landscape_classic, render_landscape_classic_demo, render_landscape_classic_standalone_demo,
+    render_landscape_classic_error, render_landscape_classic_nothing,
+    render_landscape_compact, render_landscape_compact_demo, render_landscape_compact_nothing, render_landscape_compact_error,
+    render_landscape_editorial, render_landscape_editorial_demo, render_landscape_editorial_nothing, render_landscape_editorial_error,
+    render_portrait_cover, render_portrait_cover_demo, render_portrait_cover_error, render_portrait_cover_nothing,
+    render_portrait_frosted, render_portrait_frosted_demo, render_portrait_frosted_nothing, render_portrait_frosted_error,
+    render_portrait_stripe, render_portrait_stripe_demo, render_portrait_stripe_nothing, render_portrait_stripe_error,
+    render_portrait_typeset, render_portrait_typeset_demo, render_portrait_typeset_nothing, render_portrait_typeset_error,
+    render_portrait_bookmark, render_portrait_bookmark_demo, render_portrait_bookmark_nothing, render_portrait_bookmark_error,
+    render_portrait_dogear, render_portrait_dogear_demo, render_portrait_dogear_nothing, render_portrait_dogear_error,
 )
 from .settings_ui import build_settings_page
 from .themes import DEFAULT_THEME, THEMES
@@ -170,8 +169,8 @@ async def _serve_card(render_fn, demo_fn, nothing_fn, error_fn, theme_key: str,
 @app.get("/cardlandscape")
 async def card_landscape_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     return await _serve_card(
-        render_landscape, render_landscape_demo,
-        render_landscape_nothing_playing, render_landscape_error,
+        render_landscape_classic, render_landscape_classic_demo,
+        render_landscape_classic_nothing, render_landscape_classic_error,
         theme,
     )
 
@@ -179,8 +178,8 @@ async def card_landscape_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 @app.get("/cardportrait")
 async def card_portrait_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     return await _serve_card(
-        render_portrait, render_portrait_demo,
-        render_portrait_nothing_playing, render_portrait_error,
+        render_portrait_cover, render_portrait_cover_demo,
+        render_portrait_cover_nothing, render_portrait_cover_error,
         theme,
     )
 
@@ -190,22 +189,22 @@ async def card_landscape_demo_endpoint(theme: str = Query(default=DEFAULT_THEME)
                                        label: Optional[str] = Query(default=None),
                                        corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_landscape_demo(t, label=label, corners=corners),
+    return Response(content=render_landscape_classic_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/cardlandscapestandalonedemo")
 async def card_landscape_standalone_demo_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_landscape_standalone_demo(t), media_type="image/svg+xml",
+    return Response(content=render_landscape_classic_standalone_demo(t), media_type="image/svg+xml",
                     headers={"Cache-Control": "no-store"})
 
 
 @app.get("/cardlandscapec")
 async def card_landscape_c_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     return await _serve_card(
-        render_landscape_c, render_landscape_c_demo,
-        render_landscape_c_nothing, render_landscape_c_error, theme,
+        render_landscape_compact, render_landscape_compact_demo,
+        render_landscape_compact_nothing, render_landscape_compact_error, theme,
     )
 
 @app.get("/cardlandscapecdemo")
@@ -213,15 +212,15 @@ async def card_landscape_c_demo_endpoint(theme: str = Query(default=DEFAULT_THEM
                                          label: Optional[str] = Query(default=None),
                                          corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_landscape_c_demo(t, label=label, corners=corners),
+    return Response(content=render_landscape_compact_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/cardlandscaped")
 async def card_landscape_d_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     return await _serve_card(
-        render_landscape_d, render_landscape_d_demo,
-        render_landscape_d_nothing, render_landscape_d_error, theme,
+        render_landscape_editorial, render_landscape_editorial_demo,
+        render_landscape_editorial_nothing, render_landscape_editorial_error, theme,
     )
 
 @app.get("/cardlandscapeddemo")
@@ -229,33 +228,18 @@ async def card_landscape_d_demo_endpoint(theme: str = Query(default=DEFAULT_THEM
                                          label: Optional[str] = Query(default=None),
                                          corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_landscape_d_demo(t, label=label, corners=corners),
+    return Response(content=render_landscape_editorial_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 # ── Portrait layout variants ──────────────────────────────────────────────────
 
-@app.get("/cardportraitb")
-async def card_portrait_b_endpoint(theme: str = Query(default=DEFAULT_THEME)):
-    return await _serve_card(
-        render_portrait_b, render_portrait_b_demo,
-        render_portrait_b_nothing, render_portrait_b_error, theme,
-    )
-
-@app.get("/cardportraitbdemo")
-async def card_portrait_b_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
-                                        label: Optional[str] = Query(default=None),
-                                        corners: str = Query(default="rounded")):
-    t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_b_demo(t, label=label, corners=corners),
-                    media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
-
 
 @app.get("/cardportraitc")
 async def card_portrait_c_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     return await _serve_card(
-        render_portrait_c, render_portrait_c_demo,
-        render_portrait_c_nothing, render_portrait_c_error, theme,
+        render_portrait_frosted, render_portrait_frosted_demo,
+        render_portrait_frosted_nothing, render_portrait_frosted_error, theme,
     )
 
 @app.get("/cardportraitcdemo")
@@ -263,15 +247,15 @@ async def card_portrait_c_demo_endpoint(theme: str = Query(default=DEFAULT_THEME
                                         label: Optional[str] = Query(default=None),
                                         corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_c_demo(t, label=label, corners=corners),
+    return Response(content=render_portrait_frosted_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/cardportraitd")
 async def card_portrait_d_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     return await _serve_card(
-        render_portrait_d, render_portrait_d_demo,
-        render_portrait_d_nothing, render_portrait_d_error, theme,
+        render_portrait_stripe, render_portrait_stripe_demo,
+        render_portrait_stripe_nothing, render_portrait_stripe_error, theme,
     )
 
 @app.get("/cardportraitddemo")
@@ -279,15 +263,15 @@ async def card_portrait_d_demo_endpoint(theme: str = Query(default=DEFAULT_THEME
                                         label: Optional[str] = Query(default=None),
                                         corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_d_demo(t, label=label, corners=corners),
+    return Response(content=render_portrait_stripe_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/cardportraite")
 async def card_portrait_e_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     return await _serve_card(
-        render_portrait_e, render_portrait_e_demo,
-        render_portrait_e_nothing, render_portrait_e_error, theme,
+        render_portrait_typeset, render_portrait_typeset_demo,
+        render_portrait_typeset_nothing, render_portrait_typeset_error, theme,
     )
 
 @app.get("/cardportraitedemo")
@@ -295,15 +279,15 @@ async def card_portrait_e_demo_endpoint(theme: str = Query(default=DEFAULT_THEME
                                         label: Optional[str] = Query(default=None),
                                         corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_e_demo(t, label=label, corners=corners),
+    return Response(content=render_portrait_typeset_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/cardportraitf")
 async def card_portrait_f_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     return await _serve_card(
-        render_portrait_f, render_portrait_f_demo,
-        render_portrait_f_nothing, render_portrait_f_error, theme,
+        render_portrait_bookmark, render_portrait_bookmark_demo,
+        render_portrait_bookmark_nothing, render_portrait_bookmark_error, theme,
     )
 
 @app.get("/cardportraitfdemo")
@@ -311,15 +295,15 @@ async def card_portrait_f_demo_endpoint(theme: str = Query(default=DEFAULT_THEME
                                         label: Optional[str] = Query(default=None),
                                         corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_f_demo(t, label=label, corners=corners),
+    return Response(content=render_portrait_bookmark_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/cardportraitg")
 async def card_portrait_g_endpoint(theme: str = Query(default=DEFAULT_THEME)):
     return await _serve_card(
-        render_portrait_g, render_portrait_g_demo,
-        render_portrait_g_nothing, render_portrait_g_error, theme,
+        render_portrait_dogear, render_portrait_dogear_demo,
+        render_portrait_dogear_nothing, render_portrait_dogear_error, theme,
     )
 
 @app.get("/cardportraitgdemo")
@@ -327,7 +311,7 @@ async def card_portrait_g_demo_endpoint(theme: str = Query(default=DEFAULT_THEME
                                         label: Optional[str] = Query(default=None),
                                         corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_g_demo(t, label=label, corners=corners),
+    return Response(content=render_portrait_dogear_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
@@ -336,7 +320,7 @@ async def card_portrait_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
                                       label: Optional[str] = Query(default=None),
                                       corners: str = Query(default="rounded")):
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-    return Response(content=render_portrait_demo(t, label=label, corners=corners),
+    return Response(content=render_portrait_cover_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
@@ -367,16 +351,15 @@ async def status():
 # ── Settings UI ───────────────────────────────────────────────────────────────
 
 _LAYOUT_MAP = {
-    "landscape":    (render_landscape,   render_landscape_demo,   render_landscape_nothing_playing, render_landscape_error),
-    "landscape-c":  (render_landscape_c, render_landscape_c_demo, render_landscape_c_nothing,       render_landscape_c_error),
-    "landscape-d":  (render_landscape_d, render_landscape_d_demo, render_landscape_d_nothing,       render_landscape_d_error),
-    "portrait":     (render_portrait,    render_portrait_demo,    render_portrait_nothing_playing,   render_portrait_error),
-    "portrait-b": (render_portrait_b, render_portrait_b_demo, render_portrait_b_nothing,        render_portrait_b_error),
-    "portrait-c": (render_portrait_c, render_portrait_c_demo, render_portrait_c_nothing,        render_portrait_c_error),
-    "portrait-d": (render_portrait_d, render_portrait_d_demo, render_portrait_d_nothing,        render_portrait_d_error),
-    "portrait-e": (render_portrait_e, render_portrait_e_demo, render_portrait_e_nothing,        render_portrait_e_error),
-    "portrait-f": (render_portrait_f, render_portrait_f_demo, render_portrait_f_nothing,        render_portrait_f_error),
-    "portrait-g": (render_portrait_g, render_portrait_g_demo, render_portrait_g_nothing,        render_portrait_g_error),
+    "landscape-classic":   (render_landscape_classic,   render_landscape_classic_demo,   render_landscape_classic_nothing,   render_landscape_classic_error),
+    "landscape-compact":   (render_landscape_compact,   render_landscape_compact_demo,   render_landscape_compact_nothing,   render_landscape_compact_error),
+    "landscape-editorial": (render_landscape_editorial, render_landscape_editorial_demo, render_landscape_editorial_nothing, render_landscape_editorial_error),
+    "portrait-cover":      (render_portrait_cover,      render_portrait_cover_demo,      render_portrait_cover_nothing,      render_portrait_cover_error),
+    "portrait-frosted":    (render_portrait_frosted,    render_portrait_frosted_demo,    render_portrait_frosted_nothing,    render_portrait_frosted_error),
+    "portrait-stripe":     (render_portrait_stripe,     render_portrait_stripe_demo,     render_portrait_stripe_nothing,     render_portrait_stripe_error),
+    "portrait-typeset":    (render_portrait_typeset,    render_portrait_typeset_demo,    render_portrait_typeset_nothing,    render_portrait_typeset_error),
+    "portrait-bookmark":   (render_portrait_bookmark,   render_portrait_bookmark_demo,   render_portrait_bookmark_nothing,   render_portrait_bookmark_error),
+    "portrait-dogear":     (render_portrait_dogear,     render_portrait_dogear_demo,     render_portrait_dogear_nothing,     render_portrait_dogear_error),
 }
 
 
@@ -396,7 +379,7 @@ async def get_config():
 @app.post("/api/config")
 async def post_config(request: Request):
     body = await request.json()
-    layout = body.get("layout", "landscape")
+    layout = body.get("layout", "landscape-classic")
     theme = body.get("theme", "github-dark")
     label = body.get("label", "Currently Reading")
     corners = body.get("corners", "rounded")
