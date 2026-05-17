@@ -145,10 +145,9 @@ def render_landscape(theme: Theme, data: CardData, label: str = "Currently Readi
     if data.series:
         meta_lines.append(_x(_trunc(data.series, 28)))
 
-    # Vertically centre meta lines within the cover band (y=16 to y=144)
-    meta_line_h = 20
-    meta_total  = len(meta_lines) * meta_line_h
-    meta_start  = (_LS_COVER_Y + _LS_COVER_Y + _LS_COVER_H - meta_total) // 2 + 14
+    # Align meta to the primary text top so columns feel connected
+    meta_line_h = 22
+    meta_start  = y_label
     meta_els = "".join(
         f'  <text x="{_LS_META_X}" y="{meta_start + i * meta_line_h}"'
         f' font-family="{_FONT}" font-size="11" fill="{theme.text_secondary}">'
