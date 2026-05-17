@@ -92,7 +92,7 @@ _DEMO_DATA = CardData(
 )
 
 
-def render_card(theme: Theme, data: CardData, label: str = "Now Listening") -> str:
+def render_card(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
     has_series = bool(data.series)
 
     if has_series:
@@ -140,7 +140,7 @@ def render_nothing_playing(theme: Theme) -> str:
         f'  {_bg(theme)}\n'
         f'  <text x="{cx}" y="{_H // 2 + 5}" font-family="{_FONT}" font-size="13"'
         f' fill="{theme.text_secondary}" text-anchor="middle">'
-        f'Not currently playing</text>\n'
+        f'No listening history yet</text>\n'
         f'</svg>'
     )
 
