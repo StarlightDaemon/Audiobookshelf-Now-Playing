@@ -2,14 +2,20 @@ from .config import AppConfig
 from .fujin_tokens import load_dark_tokens
 
 _LAYOUTS = [
-    ("landscape-classic",   "Classic",    "600 × 160"),
-    ("landscape-compact",   "Compact",    "600 × 80"),
-    ("landscape-editorial", "Editorial",  "600 × 200"),
-    ("portrait-cover",      "Cover",      "240 × 360"),
-    ("portrait-frosted",    "Frosted",    "240 × 360"),
-    ("portrait-typeset",    "Typeset",    "240 × 360"),
-    ("portrait-bookmark",   "Bookmark",   "165 × 460"),
-    ("portrait-dogear",     "Dog-ear",    "220 × 300"),
+    ("Landscape", [
+        ("landscape-classic",   "Classic",   "600 × 160"),
+        ("landscape-compact",   "Compact",   "600 × 80"),
+        ("landscape-editorial", "Editorial", "600 × 200"),
+    ]),
+    ("Portrait", [
+        ("portrait-cover",   "Cover",   "240 × 360"),
+        ("portrait-frosted", "Frosted", "240 × 360"),
+        ("portrait-typeset", "Typeset", "240 × 360"),
+    ]),
+    ("Other", [
+        ("portrait-bookmark", "Bookmark", "165 × 460"),
+        ("portrait-dogear",   "Dog-ear",  "220 × 300"),
+    ]),
 ]
 
 _THEMES = [
@@ -39,9 +45,12 @@ _DEMO_URLS = {
 def build_settings_page(config: AppConfig, base_url: str = "") -> str:
     t = load_dark_tokens()
     layout_options = ""
-    for key, name, dims in _LAYOUTS:
-        sel = " selected" if key == config.layout else ""
-        layout_options += f'<option value="{key}"{sel}>{name} — {dims}</option>\n'
+    for group_name, items in _LAYOUTS:
+        layout_options += f'<optgroup label="{group_name}">\n'
+        for key, name, dims in items:
+            sel = " selected" if key == config.layout else ""
+            layout_options += f'  <option value="{key}"{sel}>{name} — {dims}</option>\n'
+        layout_options += '</optgroup>\n'
 
     theme_options = ""
     for key, label in _THEMES:
