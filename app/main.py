@@ -49,6 +49,8 @@ async def lifespan(app: FastAPI):
             "then restart the service."
         )
     yield
+    if _abs is not None:
+        await _abs.aclose()
 
 
 app = FastAPI(title="Audiobookshelf Now Playing", lifespan=lifespan)
