@@ -3,19 +3,28 @@ from typing import Optional
 
 from .themes import Theme
 
-# Card geometry
-_W = 495
-_H = 128
-_COVER_X = 16
-_COVER_Y = 16
-_COVER_W = 96
-_COVER_H = 96
-_TEXT_X = 128
-_TEXT_RIGHT = _W - 16
-# Progress bar ends 40px from right edge; percentage text fills that gap
-_BAR_W = _TEXT_RIGHT - _TEXT_X - 40
-
 _FONT = "'Fira Code', 'Courier New', monospace"
+
+# ── Progress bar (disabled — saved for future live-progress widget) ───────────
+# Restore _BAR_W and _progress_bar() when re-enabling, and add progress: float
+# back to CardData. The bar rendered below the series/author line.
+#
+# _BAR_W = _TEXT_RIGHT - _TEXT_X - 40
+#
+# def _progress_bar(bar_top: int, progress: float, theme: Theme) -> str:
+#     fill_w = max(0, int(_BAR_W * progress))
+#     pct = f"{int(progress * 100)}%"
+#     pct_x = _TEXT_X + _BAR_W + 6
+#     bar_y = bar_top + 6
+#     return (
+#         f'<rect x="{_TEXT_X}" y="{bar_top}" width="{_BAR_W}" height="6"'
+#         f' rx="3" fill="{theme.border}"/>'
+#         f'<rect x="{_TEXT_X}" y="{bar_top}" width="{fill_w}" height="6"'
+#         f' rx="3" fill="{theme.accent}"/>'
+#         f'<text x="{pct_x}" y="{bar_y}" font-family="{_FONT}" font-size="11"'
+#         f' fill="{theme.text_secondary}" dominant-baseline="auto">{pct}</text>'
+#     )
+# ─────────────────────────────────────────────────────────────────────────────
 
 
 @dataclass
@@ -23,9 +32,13 @@ class CardData:
     title: str
     author: str
     series: Optional[str]
-    progress: float  # 0.0–1.0
-    cover_b64: Optional[str]  # data URI or None
+    cover_b64: Optional[str]
+    narrator: Optional[str]
+    publisher: Optional[str]
+    year: Optional[str]
 
+
+# ── Shared helpers ────────────────────────────────────────────────────────────
 
 def _x(s: str) -> str:
     return (
@@ -40,118 +53,246 @@ def _trunc(s: str, n: int) -> str:
     return s if len(s) <= n else s[: n - 1] + "…"
 
 
-def _cover(cover_b64: Optional[str], theme: Theme) -> str:
-    cx, cy, cw, ch = _COVER_X, _COVER_Y, _COVER_W, _COVER_H
+def _bg(w: int, h: int, theme: Theme) -> str:
+    return (
+        f'<rect width="{w}" height="{h}" rx="10"'
+        f' fill="{theme.background}" stroke="{theme.border}" stroke-width="1"/>'
+    )
+
+
+def _cover(
+    x: int, y: int, w: int, h: int,
+    cover_b64: Optional[str], theme: Theme,
+    clip_id: str = "cc",
+) -> str:
     if cover_b64:
         return (
-            f'<defs><clipPath id="cc">'
-            f'<rect x="{cx}" y="{cy}" width="{cw}" height="{ch}" rx="6"/>'
+            f'<defs><clipPath id="{clip_id}">'
+            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="6"/>'
             f'</clipPath></defs>'
-            f'<image href="{cover_b64}" x="{cx}" y="{cy}" width="{cw}" height="{ch}"'
-            f' clip-path="url(#cc)" preserveAspectRatio="xMidYMid slice"/>'
+            f'<image href="{cover_b64}" x="{x}" y="{y}" width="{w}" height="{h}"'
+            f' clip-path="url(#{clip_id})" preserveAspectRatio="xMidYMid slice"/>'
         )
-    # Placeholder: subtle filled rect with a centered book icon (text glyph)
-    mid_x = cx + cw // 2
-    mid_y = cy + ch // 2
+    mid_x = x + w // 2
+    mid_y = y + h // 2
+    fs = min(48, w // 3)
     return (
-        f'<rect x="{cx}" y="{cy}" width="{cw}" height="{ch}" rx="6" fill="{theme.border}"/>'
-        f'<text x="{mid_x}" y="{mid_y + 10}" font-size="32" text-anchor="middle"'
+        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="6" fill="{theme.border}"/>'
+        f'<text x="{mid_x}" y="{mid_y + fs // 3}" font-size="{fs}" text-anchor="middle"'
         f' font-family="serif" fill="{theme.text_secondary}">&#128214;</text>'
     )
 
 
-def _progress_bar(bar_top: int, progress: float, theme: Theme) -> str:
-    fill_w = max(0, int(_BAR_W * progress))
-    pct = f"{int(progress * 100)}%"
-    pct_x = _TEXT_X + _BAR_W + 6
-    bar_y = bar_top + 6  # baseline aligned with bottom of bar
-
-    return (
-        f'<rect x="{_TEXT_X}" y="{bar_top}" width="{_BAR_W}" height="6"'
-        f' rx="3" fill="{theme.border}"/>'
-        f'<rect x="{_TEXT_X}" y="{bar_top}" width="{fill_w}" height="6"'
-        f' rx="3" fill="{theme.accent}"/>'
-        f'<text x="{pct_x}" y="{bar_y}" font-family="{_FONT}" font-size="11"'
-        f' fill="{theme.text_secondary}" dominant-baseline="auto">{pct}</text>'
-    )
-
-
-def _bg(theme: Theme) -> str:
-    return (
-        f'<rect width="{_W}" height="{_H}" rx="10"'
-        f' fill="{theme.background}" stroke="{theme.border}" stroke-width="1"/>'
-    )
-
+# ── Demo data ─────────────────────────────────────────────────────────────────
 
 _DEMO_DATA = CardData(
     title="Project Hail Mary",
     author="Andy Weir",
     series=None,
-    progress=0.62,
     cover_b64=None,
+    narrator="Ray Porter",
+    publisher="Ballantine Books",
+    year="2021",
 )
 
 
-def render_card(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
-    has_series = bool(data.series)
+# ── Landscape card (600×160) ──────────────────────────────────────────────────
+#
+#  ┌──────────────────────────────────────────────────────────────────────┐
+#  │            │                          │                              │
+#  │  [COVER]   │  Currently Reading       │  Publisher  Del Rey          │
+#  │  128×128   │  Project Hail Mary       │  Year       2021             │
+#  │            │  Andy Weir               │                              │
+#  │            │  Narrated by Ray Porter  │  Series  Exp. Force · Bk 1   │
+#  │            │                          │                              │
+#  └──────────────────────────────────────────────────────────────────────┘
 
-    if has_series:
-        y_label, y_title, y_author, y_series, bar_top = 27, 46, 63, 79, 94
+_LS_W = 600
+_LS_H = 160
+_LS_COVER_X = 16
+_LS_COVER_Y = 16
+_LS_COVER_W = 128
+_LS_COVER_H = 128
+_LS_PRIMARY_X = 160
+_LS_SEP_X = 355
+_LS_META_X = 372
+
+
+def render_landscape(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
+    # Primary zone — cluster text, adjust y positions based on narrator presence
+    if data.narrator:
+        y_label, y_title, y_author, y_narrator = 30, 52, 71, 88
     else:
-        y_label, y_title, y_author, bar_top = 30, 50, 68, 87
-        y_series = 0
+        y_label, y_title, y_author = 38, 60, 79
+        y_narrator = 0
 
-    title = _x(_trunc(data.title, 38))
-    author = _x(_trunc(data.author, 44))
+    title  = _x(_trunc(data.title, 26))
+    author = _x(_trunc(data.author, 28))
 
-    series_el = ""
-    if has_series:
-        series = _x(_trunc(data.series, 50))
-        series_el = (
-            f'<text x="{_TEXT_X}" y="{y_series}" font-family="{_FONT}"'
-            f' font-size="11" fill="{theme.text_secondary}">{series}</text>'
+    narrator_el = ""
+    if data.narrator:
+        narrator_el = (
+            f'  <text x="{_LS_PRIMARY_X}" y="{y_narrator}" font-family="{_FONT}"'
+            f' font-size="11" fill="{theme.text_secondary}">'
+            f'Narrated by {_x(_trunc(data.narrator, 22))}</text>\n'
         )
 
+    # Metadata zone — publisher·year on one line, series on another
+    meta_lines = []
+    pubyr_parts = [p for p in [data.publisher, data.year] if p]
+    if pubyr_parts:
+        meta_lines.append(_x(_trunc(" · ".join(pubyr_parts), 28)))
+    if data.series:
+        meta_lines.append(_x(_trunc(data.series, 28)))
+
+    # Vertically centre meta lines within the cover band (y=16 to y=144)
+    meta_line_h = 20
+    meta_total  = len(meta_lines) * meta_line_h
+    meta_start  = (_LS_COVER_Y + _LS_COVER_Y + _LS_COVER_H - meta_total) // 2 + 14
+    meta_els = "".join(
+        f'  <text x="{_LS_META_X}" y="{meta_start + i * meta_line_h}"'
+        f' font-family="{_FONT}" font-size="11" fill="{theme.text_secondary}">'
+        f'{line}</text>\n'
+        for i, line in enumerate(meta_lines)
+    )
+
+    sep = (
+        f'  <line x1="{_LS_SEP_X}" y1="20" x2="{_LS_SEP_X}" y2="140"'
+        f' stroke="{theme.border}" stroke-width="1"/>\n'
+    )
+
     return (
-        f'<svg width="{_W}" height="{_H}" xmlns="http://www.w3.org/2000/svg"'
+        f'<svg width="{_LS_W}" height="{_LS_H}" xmlns="http://www.w3.org/2000/svg"'
         f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
-        f'  {_bg(theme)}\n'
-        f'  {_cover(data.cover_b64, theme)}\n'
-        f'  <text x="{_TEXT_X}" y="{y_label}" font-family="{_FONT}"'
-        f' font-size="11" fill="{theme.text_secondary}">{_x(label)}</text>\n'
-        f'  <text x="{_TEXT_X}" y="{y_title}" font-family="{_FONT}"'
+        f'  {_bg(_LS_W, _LS_H, theme)}\n'
+        f'  {_cover(_LS_COVER_X, _LS_COVER_Y, _LS_COVER_W, _LS_COVER_H, data.cover_b64, theme)}\n'
+        f'  <text x="{_LS_PRIMARY_X}" y="{y_label}" font-family="{_FONT}"'
+        f' font-size="10" fill="{theme.text_secondary}">{_x(label)}</text>\n'
+        f'  <text x="{_LS_PRIMARY_X}" y="{y_title}" font-family="{_FONT}"'
         f' font-size="14" font-weight="600" fill="{theme.text_primary}">{title}</text>\n'
-        f'  <text x="{_TEXT_X}" y="{y_author}" font-family="{_FONT}"'
+        f'  <text x="{_LS_PRIMARY_X}" y="{y_author}" font-family="{_FONT}"'
         f' font-size="12" fill="{theme.text_secondary}">{author}</text>\n'
-        f'  {series_el}\n'
-        f'  {_progress_bar(bar_top, data.progress, theme)}\n'
+        f'{narrator_el}'
+        f'{sep}'
+        f'{meta_els}'
         f'</svg>'
     )
 
 
-def render_demo(theme: Theme) -> str:
-    return render_card(theme, _DEMO_DATA, label="Demo — configure credentials to go live")
-
-
-def render_nothing_playing(theme: Theme) -> str:
-    cx = _W // 2
+def _ls_status_card(theme: Theme, message: str) -> str:
+    cx = _LS_W // 2
     return (
-        f'<svg width="{_W}" height="{_H}" xmlns="http://www.w3.org/2000/svg">\n'
-        f'  {_bg(theme)}\n'
-        f'  <text x="{cx}" y="{_H // 2 + 5}" font-family="{_FONT}" font-size="13"'
-        f' fill="{theme.text_secondary}" text-anchor="middle">'
-        f'No listening history yet</text>\n'
+        f'<svg width="{_LS_W}" height="{_LS_H}" xmlns="http://www.w3.org/2000/svg">\n'
+        f'  {_bg(_LS_W, _LS_H, theme)}\n'
+        f'  <text x="{cx}" y="{_LS_H // 2 + 5}" font-family="{_FONT}" font-size="13"'
+        f' fill="{theme.text_secondary}" text-anchor="middle">{_x(message)}</text>\n'
         f'</svg>'
     )
 
 
-def render_error(theme: Theme) -> str:
-    cx = _W // 2
+def render_landscape_demo(theme: Theme) -> str:
+    return render_landscape(theme, _DEMO_DATA, label="Demo — configure credentials to go live")
+
+
+def render_landscape_nothing_playing(theme: Theme) -> str:
+    return _ls_status_card(theme, "No listening history yet")
+
+
+def render_landscape_error(theme: Theme) -> str:
+    return _ls_status_card(theme, "Unable to reach Audiobookshelf")
+
+
+# ── Portrait / trading card (240×360) ─────────────────────────────────────────
+#
+#  ┌─────────────────────────┐
+#  │                         │
+#  │        [COVER]          │
+#  │        208×208          │
+#  │                         │
+#  ├─────────────────────────┤
+#  │  Currently Reading      │
+#  │  Project Hail Mary      │
+#  │  Andy Weir              │
+#  │  Narrated by Ray Porter │
+#  │  Ballantine Books·2021  │
+#  │  Series Name · Bk 1     │
+#  └─────────────────────────┘
+
+_PT_W       = 240
+_PT_H       = 360
+_PT_PAD     = 16
+_PT_COVER_W = _PT_W - 2 * _PT_PAD        # 208
+_PT_COVER_H = _PT_COVER_W                # 208 — square
+_PT_COVER_X = _PT_PAD
+_PT_COVER_Y = _PT_PAD
+_PT_DIV_Y   = _PT_COVER_Y + _PT_COVER_H + 8   # 232
+
+
+def render_portrait(theme: Theme, data: CardData, label: str = "Currently Reading") -> str:
+    title  = _x(_trunc(data.title, 22))
+    author = _x(_trunc(data.author, 24))
+
+    # Build ordered list of (font_size, bold, content) for text below divider
+    lines: list[tuple[int, bool, str]] = [
+        (10, False, _x(label)),
+        (14, True,  title),
+        (12, False, author),
+    ]
+    if data.narrator:
+        lines.append((11, False, f'Narrated by {_x(_trunc(data.narrator, 18))}'))
+    pubyr_parts = [p for p in [data.publisher, data.year] if p]
+    if pubyr_parts:
+        lines.append((11, False, _x(_trunc(" · ".join(pubyr_parts), 24))))
+    if data.series:
+        lines.append((11, False, _x(_trunc(data.series, 24))))
+
+    y = _PT_DIV_Y + 22
+    text_els = ""
+    for size, bold, content in lines:
+        weight = ' font-weight="600"' if bold else ""
+        color  = theme.text_primary if bold else theme.text_secondary
+        text_els += (
+            f'  <text x="{_PT_PAD}" y="{y}" font-family="{_FONT}"'
+            f' font-size="{size}"{weight} fill="{color}">{content}</text>\n'
+        )
+        y += size + 7
+
+    divider = (
+        f'  <line x1="{_PT_PAD}" y1="{_PT_DIV_Y}"'
+        f' x2="{_PT_W - _PT_PAD}" y2="{_PT_DIV_Y}"'
+        f' stroke="{theme.border}" stroke-width="1"/>\n'
+    )
+
     return (
-        f'<svg width="{_W}" height="{_H}" xmlns="http://www.w3.org/2000/svg">\n'
-        f'  {_bg(theme)}\n'
-        f'  <text x="{cx}" y="{_H // 2 + 5}" font-family="{_FONT}" font-size="13"'
-        f' fill="{theme.text_secondary}" text-anchor="middle">'
-        f'Unable to reach Audiobookshelf</text>\n'
+        f'<svg width="{_PT_W}" height="{_PT_H}" xmlns="http://www.w3.org/2000/svg"'
+        f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
+        f'  {_bg(_PT_W, _PT_H, theme)}\n'
+        f'  {_cover(_PT_COVER_X, _PT_COVER_Y, _PT_COVER_W, _PT_COVER_H, data.cover_b64, theme, clip_id="pc")}\n'
+        f'{divider}'
+        f'{text_els}'
         f'</svg>'
     )
+
+
+def _pt_status_card(theme: Theme, message: str) -> str:
+    cx = _PT_W // 2
+    cy = _PT_COVER_Y + _PT_COVER_H + (_PT_H - _PT_COVER_Y - _PT_COVER_H) // 2
+    return (
+        f'<svg width="{_PT_W}" height="{_PT_H}" xmlns="http://www.w3.org/2000/svg">\n'
+        f'  {_bg(_PT_W, _PT_H, theme)}\n'
+        f'  <text x="{cx}" y="{cy}" font-family="{_FONT}" font-size="11"'
+        f' fill="{theme.text_secondary}" text-anchor="middle">{_x(message)}</text>\n'
+        f'</svg>'
+    )
+
+
+def render_portrait_demo(theme: Theme) -> str:
+    return render_portrait(theme, _DEMO_DATA, label="Demo — configure credentials")
+
+
+def render_portrait_nothing_playing(theme: Theme) -> str:
+    return _pt_status_card(theme, "No listening history yet")
+
+
+def render_portrait_error(theme: Theme) -> str:
+    return _pt_status_card(theme, "Unable to reach Audiobookshelf")

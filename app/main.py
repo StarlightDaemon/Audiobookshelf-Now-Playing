@@ -8,13 +8,17 @@ from fastapi.responses import Response
 
 from .abs import AbsClient, is_configured
 from .cache import TTLCache
-from .render import CardData, render_card, render_demo, render_error, render_nothing_playing
+from .render import (
+    CardData,
+    render_landscape, render_landscape_demo, render_landscape_error, render_landscape_nothing_playing,
+    render_portrait, render_portrait_demo, render_portrait_error, render_portrait_nothing_playing,
+)
 from .themes import DEFAULT_THEME, THEMES
 
 logger = logging.getLogger(__name__)
 
-# How often to poll ABS for the current session (detects book changes quickly)
-SESSION_TTL = int(os.environ.get("SESSION_TTL", "10"))
+# How often to poll ABS for the current session (book changes only)
+SESSION_TTL = int(os.environ.get("SESSION_TTL", "300"))
 # How long to cache metadata + cover art per book (expensive; only re-fetched on book change)
 CARD_TTL = int(os.environ.get("CARD_TTL", "300"))
 
@@ -46,10 +50,9 @@ app = FastAPI(title="Audiobookshelf Now Playing", lifespan=lifespan)
 async def _fetch_card_data() -> Optional[CardData]:
     """
     Two-tier fetch:
-    - Session (SESSION_TTL): lightweight poll — detects book changes fast.
+    - Session (SESSION_TTL): poll — detects book changes.
     - Card metadata (CARD_TTL, keyed by item_id): cover art + title/author/series.
       Only re-fetched when the book changes or CARD_TTL expires.
-    Progress is always taken from the fresh session result.
     """
     # ── Session (short cache) ─────────────────────────────────────────────────
     session = _session_cache.get("session")
@@ -63,9 +66,6 @@ async def _fetch_card_data() -> Optional[CardData]:
         return None
 
     item_id: str = session.get("libraryItemId", "")
-    duration: float = session.get("duration") or 0
-    current_time: float = session.get("currentTime") or 0
-    progress = max(0.0, min(1.0, current_time / duration)) if duration > 0 else 0.0
 
     # ── Card metadata (long cache, keyed by item_id) ──────────────────────────
     # A different item_id is a natural cache miss — no manual invalidation needed.
@@ -86,45 +86,67 @@ async def _fetch_card_data() -> Optional[CardData]:
             series = f"{name} · Book {seq}" if seq else name
             break
 
+        narrator: Optional[str] = item_meta.get("narrator") or ", ".join(
+            n["name"] for n in item_meta.get("narrators", []) if n.get("name")
+        ) or None
+
+        publisher: Optional[str] = item_meta.get("publisher") or None
+
+        raw_year = item_meta.get("publishedYear")
+        year: Optional[str] = str(raw_year) if raw_year else None
+
         try:
             cover_b64 = await _abs.get_cover_b64(item_id)
         except Exception:
             cover_b64 = None
 
-        meta = {"title": title, "author": author, "series": series, "cover_b64": cover_b64}
+        meta = {
+            "title": title, "author": author, "series": series, "cover_b64": cover_b64,
+            "narrator": narrator, "publisher": publisher, "year": year,
+        }
         _card_cache.set(item_id, meta)
 
     return CardData(
         title=meta["title"],
         author=meta["author"],
         series=meta["series"],
-        progress=progress,
         cover_b64=meta["cover_b64"],
+        narrator=meta["narrator"],
+        publisher=meta["publisher"],
+        year=meta["year"],
     )
 
 
-@app.get("/card")
-async def card_endpoint(theme: str = Query(default=DEFAULT_THEME)):
-    t = THEMES.get(theme, THEMES[DEFAULT_THEME])
-
+async def _serve_card(render_fn, demo_fn, nothing_fn, error_fn, theme_key: str) -> Response:
+    t = THEMES.get(theme_key, THEMES[DEFAULT_THEME])
     if not _configured:
-        return Response(
-            content=render_demo(t),
-            media_type="image/svg+xml",
-            headers={"Cache-Control": "no-store"},
-        )
-
+        return Response(content=demo_fn(t), media_type="image/svg+xml",
+                        headers={"Cache-Control": "no-store"})
     try:
         data = await _fetch_card_data()
-        svg = render_nothing_playing(t) if data is None else render_card(t, data)
+        svg = nothing_fn(t) if data is None else render_fn(t, data)
     except Exception:
         logger.exception("Failed to fetch card data from ABS")
-        svg = render_error(t)
+        svg = error_fn(t)
+    return Response(content=svg, media_type="image/svg+xml",
+                    headers={"Cache-Control": f"public, max-age={SESSION_TTL}"})
 
-    return Response(
-        content=svg,
-        media_type="image/svg+xml",
-        headers={"Cache-Control": f"public, max-age={SESSION_TTL}"},
+
+@app.get("/card")
+async def card_landscape_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+    return await _serve_card(
+        render_landscape, render_landscape_demo,
+        render_landscape_nothing_playing, render_landscape_error,
+        theme,
+    )
+
+
+@app.get("/card/portrait")
+async def card_portrait_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+    return await _serve_card(
+        render_portrait, render_portrait_demo,
+        render_portrait_nothing_playing, render_portrait_error,
+        theme,
     )
 
 
@@ -147,7 +169,6 @@ async def status():
             "title": data.title,
             "author": data.author,
             "series": data.series,
-            "progress_pct": round(data.progress * 100),
         }
     except Exception:
         return {"playing": False, "error": True}
