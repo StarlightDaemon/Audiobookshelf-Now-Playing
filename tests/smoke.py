@@ -14,6 +14,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.render import (
     render_landscape_demo,
+    render_landscape_c_demo,
+    render_landscape_d_demo,
     render_portrait_demo,
     render_portrait_b_demo,
     render_portrait_c_demo,
@@ -26,6 +28,8 @@ from app.themes import THEMES
 
 RENDERERS = [
     ("render_landscape_demo",   render_landscape_demo),
+    ("render_landscape_c_demo", render_landscape_c_demo),
+    ("render_landscape_d_demo", render_landscape_d_demo),
     ("render_portrait_demo",    render_portrait_demo),
     ("render_portrait_b_demo",  render_portrait_b_demo),
     ("render_portrait_c_demo",  render_portrait_c_demo),

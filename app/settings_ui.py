@@ -2,8 +2,10 @@ from .config import AppConfig
 from .fujin_tokens import load_dark_tokens
 
 _LAYOUTS = [
-    ("landscape",  "Landscape",  "600 × 160"),
-    ("portrait",   "Portrait A", "240 × 360"),
+    ("landscape",   "Landscape",          "600 × 160"),
+    ("landscape-c", "Landscape Compact",  "600 × 80"),
+    ("landscape-d", "Landscape Editorial","600 × 200"),
+    ("portrait",    "Portrait A",         "240 × 360"),
     ("portrait-b", "Portrait B", "240 × 360"),
     ("portrait-c", "Portrait C", "240 × 360"),
     ("portrait-d", "Portrait D", "240 × 360"),
@@ -25,8 +27,10 @@ _CORNERS = [
 ]
 
 _DEMO_URLS = {
-    "landscape":  "/cardlandscapedemo",
-    "portrait":   "/cardportraitdemo",
+    "landscape":   "/cardlandscapedemo",
+    "landscape-c": "/cardlandscapecdemo",
+    "landscape-d": "/cardlandscapeddemo",
+    "portrait":    "/cardportraitdemo",
     "portrait-b": "/cardportraitbdemo",
     "portrait-c": "/cardportraitcdemo",
     "portrait-d": "/cardportraitddemo",

@@ -11,7 +11,8 @@ _CONFIG_PATH = os.environ.get(
 )
 
 VALID_LAYOUTS = {
-    "landscape", "portrait", "portrait-b",
+    "landscape", "landscape-c", "landscape-d",
+    "portrait", "portrait-b",
     "portrait-c", "portrait-d", "portrait-e",
     "portrait-f", "portrait-g",
 }

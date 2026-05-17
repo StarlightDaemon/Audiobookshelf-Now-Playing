@@ -247,6 +247,199 @@ def render_landscape_error(theme: Theme) -> str:
     return _ls_status_card(theme, "Unable to reach Audiobookshelf")
 
 
+# ── Landscape C — Compact Banner (600×80) ─────────────────────────────────────
+#
+#  ┌──────────────────────────────────────────────────────────────────────────┐
+#  │ [cover]  CURRENTLY READING                                               │
+#  │  64×64   Project Hail Mary                                               │
+#  │          Andy Weir · 2021                                    ████████░░  │
+#  └──────────────────────────────────────────────────────────────────────────┘
+
+_LC_W   = 600
+_LC_H   = 80
+_LC_PAD = 8
+_LC_COV = 64
+
+
+def _lc_status_card(theme: Theme, message: str) -> str:
+    return (
+        f'<svg width="{_LC_W}" height="{_LC_H}" xmlns="http://www.w3.org/2000/svg">\n'
+        f'  {_bg(_LC_W, _LC_H, theme)}\n'
+        f'  <text x="{_LC_W // 2}" y="{_LC_H // 2 + 5}" font-family="{_FONT}" font-size="11"'
+        f' fill="{theme.text_secondary}" text-anchor="middle">{_x(message)}</text>\n'
+        f'</svg>'
+    )
+
+
+def render_landscape_c(theme: Theme, data: CardData, label: str = "Currently Reading",
+                       corners: str = "rounded") -> str:
+    w, h    = _LC_W, _LC_H
+    pad     = _LC_PAD
+    cov     = _LC_COV
+    card_rx = 0 if corners == "square" else 10
+
+    cov_x, cov_y = pad, pad
+    text_x = cov_x + cov + 12   # 84
+
+    title  = _x(_trunc(data.title,  48))
+    author = _x(_trunc(data.author, 36))
+    meta   = f" · {_x(data.year)}" if data.year else ""
+
+    bar = _progress_bar(text_x, h - pad - 3, w - text_x - pad,
+                        data.progress, theme, bar_h=3, show_pct=False)
+
+    return (
+        f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg"'
+        f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
+        f'  {_bg(w, h, theme, rx=card_rx)}\n'
+        f'  {_cover(cov_x, cov_y, cov, cov, data.cover_b64, theme, clip_id="lcc")}\n'
+        f'  <text x="{text_x}" y="22" font-family="{_FONT}" font-size="9"'
+        f' fill="{theme.accent}" letter-spacing="1.5">{_x(label.upper())}</text>\n'
+        f'  <text x="{text_x}" y="40" font-family="{_FONT}" font-size="14"'
+        f' font-weight="600" fill="{theme.text_primary}">{title}</text>\n'
+        f'  <text x="{text_x}" y="57" font-family="{_FONT}" font-size="11"'
+        f' fill="{theme.text_secondary}">{author}{meta}</text>\n'
+        f'  {bar}\n'
+        f'</svg>'
+    )
+
+
+def render_landscape_c_demo(theme: Theme, label: Optional[str] = None,
+                             corners: str = "rounded") -> str:
+    return render_landscape_c(theme, _DEMO_DATA, corners=corners,
+                              label=label or "Currently Reading")
+
+
+def render_landscape_c_nothing(theme: Theme) -> str:
+    return _lc_status_card(theme, "No listening history yet")
+
+
+def render_landscape_c_error(theme: Theme) -> str:
+    return _lc_status_card(theme, "Unable to reach Audiobookshelf")
+
+
+# ── Landscape D — Wide Editorial (600×200) ────────────────────────────────────
+#
+#  ┌──────────────────────────────────────────────────────────────────────────┐
+#  │ CURRENTLY READING ──────────────────────────────────  │  ┌────────────┐ │
+#  │                                                       │  │            │ │
+#  │ Project Hail Mary                                     │  │ [cover]    │ │
+#  │ (wraps if long)                                       │  │ 168×152    │ │
+#  │ Andy Weir                                             │  │            │ │
+#  │ Narrated by Ray Porter                                │  │            │ │
+#  │ Ballantine Books · 2021                               │  └────────────┘ │
+#  │ The Weir Trilogy · Book 2                             │                 │
+#  │ ████████████████░░░░   62%                            │                 │
+#  └──────────────────────────────────────────────────────────────────────────┘
+
+_LD_W     = 600
+_LD_H     = 200
+_LD_PAD   = 20
+_LD_SEP_X = 390
+_LD_COV_X = 408
+_LD_COV_Y = 28
+_LD_COV_W = 168
+_LD_COV_H = 152
+
+
+def _ld_status_card(theme: Theme, message: str) -> str:
+    return (
+        f'<svg width="{_LD_W}" height="{_LD_H}" xmlns="http://www.w3.org/2000/svg">\n'
+        f'  {_bg(_LD_W, _LD_H, theme)}\n'
+        f'  <text x="{_LD_W // 2}" y="{_LD_H // 2 + 5}" font-family="{_FONT}" font-size="13"'
+        f' fill="{theme.text_secondary}" text-anchor="middle">{_x(message)}</text>\n'
+        f'</svg>'
+    )
+
+
+def render_landscape_d(theme: Theme, data: CardData, label: str = "Currently Reading",
+                       corners: str = "rounded") -> str:
+    w, h    = _LD_W, _LD_H
+    pad     = _LD_PAD
+    sep_x   = _LD_SEP_X
+    card_rx = 0 if corners == "square" else 10
+
+    title_lines = _word_wrap(data.title, 24)[:2]
+    title_y_start = 58
+    title_line_h  = 24
+
+    y_author = title_y_start + len(title_lines) * title_line_h + 10
+
+    detail: list[str] = []
+    if data.narrator:
+        detail.append(_x(_trunc(f'Narrated by {data.narrator}', 40)))
+    pubyr = [p for p in [data.publisher, data.year] if p]
+    if pubyr:
+        detail.append(_x(_trunc(" · ".join(pubyr), 40)))
+    if data.series:
+        detail.append(_x(_trunc(data.series, 40)))
+
+    title_els = "".join(
+        f'  <text x="{pad}" y="{title_y_start + i * title_line_h}"'
+        f' font-family="{_FONT}" font-size="18" font-weight="700"'
+        f' fill="{theme.text_primary}">{_x(line)}</text>\n'
+        for i, line in enumerate(title_lines)
+    )
+
+    author_el = (
+        f'  <text x="{pad}" y="{y_author}" font-family="{_FONT}"'
+        f' font-size="13" font-weight="600" fill="{theme.text_primary}">'
+        f'{_x(_trunc(data.author, 36))}</text>\n'
+    )
+
+    detail_y = y_author + 18
+    detail_els = "".join(
+        f'  <text x="{pad}" y="{detail_y + i * 16}" font-family="{_FONT}"'
+        f' font-size="11" fill="{theme.text_secondary}">{line}</text>\n'
+        for i, line in enumerate(detail)
+    )
+
+    # Label with trailing rule on the same cap-height baseline
+    rule_x1 = pad + int(len(label) * 7.5) + 8
+    header = (
+        f'  <text x="{pad}" y="24" font-family="{_FONT}" font-size="9"'
+        f' fill="{theme.accent}" letter-spacing="2">{_x(label.upper())}</text>\n'
+        f'  <line x1="{rule_x1}" y1="21" x2="{sep_x - 10}" y2="21"'
+        f' stroke="{theme.border}" stroke-width="1"/>\n'
+    )
+
+    sep = (
+        f'  <line x1="{sep_x}" y1="32" x2="{sep_x}" y2="{h - pad}"'
+        f' stroke="{theme.border}" stroke-width="1"/>\n'
+    )
+
+    bar = _progress_bar(pad, h - 14, sep_x - pad - 8,
+                        data.progress, theme, bar_h=4, show_pct=True)
+
+    return (
+        f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg"'
+        f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
+        f'  {_bg(w, h, theme, rx=card_rx)}\n'
+        f'{header}'
+        f'{title_els}'
+        f'{author_el}'
+        f'{detail_els}'
+        f'{sep}'
+        f'  {_cover(_LD_COV_X, _LD_COV_Y, _LD_COV_W, _LD_COV_H, data.cover_b64, theme, clip_id="ldc")}\n'
+        f'  {bar}\n'
+        f'</svg>'
+    )
+
+
+def render_landscape_d_demo(theme: Theme, label: Optional[str] = None,
+                             corners: str = "rounded") -> str:
+    return render_landscape_d(theme, _DEMO_DATA, corners=corners,
+                              label=label or "Currently Reading")
+
+
+def render_landscape_d_nothing(theme: Theme) -> str:
+    return _ld_status_card(theme, "No listening history yet")
+
+
+def render_landscape_d_error(theme: Theme) -> str:
+    return _ld_status_card(theme, "Unable to reach Audiobookshelf")
+
+
 # ── Portrait / trading card (240×360) ─────────────────────────────────────────
 #
 #  ┌─────────────────────────┐
@@ -287,9 +480,6 @@ def render_portrait(theme: Theme, data: CardData, label: str = "Currently Readin
     ]
     if data.narrator:
         lines.append((11, False, f'Narrated by {_x(_trunc(data.narrator, 18))}'))
-    pubyr_parts = [p for p in [data.publisher, data.year] if p]
-    if pubyr_parts:
-        lines.append((11, False, _x(_trunc(" · ".join(pubyr_parts), 24))))
     if data.series:
         lines.append((11, False, _x(_trunc(data.series, 24))))
 
@@ -383,13 +573,8 @@ def render_portrait_b(theme: Theme, data: CardData, label: str = "Currently Read
     ]
     if data.narrator:
         lines.append((11, False, f'Narrated by {_x(_trunc(data.narrator, 20))}'))
-    pubyr_parts = [p for p in [data.publisher, data.year] if p]
-    if pubyr_parts:
-        lines.append((11, False, _x(_trunc(" · ".join(pubyr_parts), 26))))
     if data.series:
         lines.append((11, False, _x(_trunc(data.series, 26))))
-    else:
-        lines.append((11, False, "Standalone"))
 
     # Pin text block to bottom, grow upward
     line_gap = 6
@@ -509,13 +694,8 @@ def render_portrait_c(theme: Theme, data: CardData, label: str = "Currently Read
     ]
     if data.narrator:
         lines.append((11, False, f'Narrated by {_x(_trunc(data.narrator, 20))}', False))
-    pubyr_parts = [p for p in [data.publisher, data.year] if p]
-    if pubyr_parts:
-        lines.append((11, False, _x(_trunc(" · ".join(pubyr_parts), 26)), False))
     if data.series:
         lines.append((11, False, _x(_trunc(data.series, 26)), False))
-    else:
-        lines.append((11, False, "Standalone", True))
 
     line_gap = 7
     block_h = sum(s + line_gap for s, _, _, _ in lines) + p_pad
@@ -633,13 +813,8 @@ def render_portrait_d(theme: Theme, data: CardData, label: str = "Currently Read
     ]
     if data.narrator:
         lines.append((11, False, f'Narrated by {_x(_trunc(data.narrator, 22))}', False))
-    pubyr_parts = [p for p in [data.publisher, data.year] if p]
-    if pubyr_parts:
-        lines.append((11, False, _x(_trunc(" · ".join(pubyr_parts), 26)), False))
     if data.series:
         lines.append((11, False, _x(_trunc(data.series, 26)), False))
-    else:
-        lines.append((11, False, "Standalone", True))
 
     line_gap  = 7
     y = div_y + 18
@@ -769,10 +944,9 @@ def render_portrait_e(theme: Theme, data: CardData, label: str = "Currently Read
     thumb = 80
     thumb_x, thumb_y = pad, 44
 
-    # Quick-meta beside thumbnail: author + year (compact)
+    # Quick-meta beside thumbnail: author (compact)
     meta_x   = thumb_x + thumb + 10
     author_s = _x(_trunc(data.author, 12))
-    year_s   = _x(data.year or "")
 
     # Large wrapped title — monospace ~17 chars per line at 18px in 208px
     title_lines = _word_wrap(data.title, 17)
@@ -781,16 +955,11 @@ def render_portrait_e(theme: Theme, data: CardData, label: str = "Currently Read
 
     rule_y = title_y_start + len(title_lines) * title_line_h + 10
 
-    # Lower detail lines — year already shown beside thumbnail, omit from here
     detail_lines: list[tuple[str, bool]] = []
     if data.narrator:
         detail_lines.append((f'Narrated by {_x(_trunc(data.narrator, 22))}', False))
-    if data.publisher:
-        detail_lines.append((_x(_trunc(data.publisher, 26)), False))
     if data.series:
         detail_lines.append((_x(_trunc(data.series, 26)), False))
-    else:
-        detail_lines.append(("Standalone", True))
 
     detail_y  = rule_y + 18
     detail_els = ""
@@ -841,8 +1010,6 @@ def render_portrait_e(theme: Theme, data: CardData, label: str = "Currently Read
         f'{thumb_el}'
         f'  <text x="{meta_x}" y="{thumb_y + 18}" font-family="{_FONT}"'
         f' font-size="12" font-weight="600" fill="{theme.text_primary}">{author_s}</text>\n'
-        f'  <text x="{meta_x}" y="{thumb_y + 36}" font-family="{_FONT}"'
-        f' font-size="11" fill="{theme.text_secondary}">{year_s}</text>\n'
         f'{title_els}'
         f'{rule}'
         f'{detail_els}'
@@ -933,13 +1100,6 @@ def render_portrait_f(theme: Theme, data: CardData, label: str = "Currently Read
     for tl in title_lines:
         lines.append((13, True, _x(tl)))
     lines.append((11, False, _x(_trunc(data.author, 18))))
-    if data.narrator:
-        lines.append((10, False, _x(_trunc(data.narrator, 19))))
-    pubyr_parts = [p for p in [data.publisher, data.year] if p]
-    if pubyr_parts:
-        lines.append((10, False, _x(_trunc(" · ".join(pubyr_parts), 19))))
-    if data.series:
-        lines.append((10, False, _x(_trunc(data.series, 19))))
 
     y = div_y + 16
     text_els = ""
@@ -1067,9 +1227,6 @@ def render_portrait_g(theme: Theme, data: CardData, label: str = "Currently Read
     below_lines: list[str] = []
     if data.narrator:
         below_lines.append(_x(_trunc(data.narrator, 26)))
-    pubyr_parts = [p for p in [data.publisher, data.year] if p]
-    if pubyr_parts:
-        below_lines.append(_x(_trunc(" · ".join(pubyr_parts), 26)))
     if data.series:
         below_lines.append(_x(_trunc(data.series, 26)))
 
