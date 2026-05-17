@@ -86,9 +86,15 @@ async def _fetch_card_data() -> Optional[CardData]:
             series = f"{name} · Book {seq}" if seq else name
             break
 
-        narrator: Optional[str] = item_meta.get("narrator") or ", ".join(
-            n["name"] for n in item_meta.get("narrators", []) if n.get("name")
-        ) or None
+        narrator: Optional[str] = item_meta.get("narrator") or None
+        if not narrator:
+            parts = []
+            for n in item_meta.get("narrators", []):
+                if isinstance(n, str) and n:
+                    parts.append(n)
+                elif isinstance(n, dict) and n.get("name"):
+                    parts.append(n["name"])
+            narrator = ", ".join(parts) or None
 
         publisher: Optional[str] = item_meta.get("publisher") or None
 
