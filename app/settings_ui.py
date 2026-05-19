@@ -6,6 +6,7 @@ _LAYOUTS = [
         ("landscape-classic",   "Classic",   "600 × 160"),
         ("landscape-compact",   "Compact",   "600 × 80"),
         ("landscape-editorial", "Editorial", "600 × 200"),
+        ("landscape-minimal",   "Minimal",   "600 × 44"),
     ]),
     ("Portrait", [
         ("portrait-cover",   "Cover",   "240 × 360"),
@@ -13,8 +14,10 @@ _LAYOUTS = [
         ("portrait-typeset", "Typeset", "240 × 360"),
     ]),
     ("Other", [
-        ("portrait-bookmark", "Bookmark", "165 × 460"),
-        ("portrait-dogear",   "Dog-ear",  "220 × 300"),
+        ("portrait-bookmark",   "Bookmark",   "165 × 460"),
+        ("portrait-dogear",     "Dog-ear",    "220 × 300"),
+        ("portrait-spine",      "Spine",      "56 × 360"),
+        ("portrait-spine-wide", "Spine Wide", "80 × 460"),
     ]),
 ]
 
@@ -34,11 +37,14 @@ _DEMO_URLS = {
     "landscape-classic":   "/cardlandscapedemo",
     "landscape-compact":   "/cardlandscapecdemo",
     "landscape-editorial": "/cardlandscapeddemo",
+    "landscape-minimal":   "/cardlandscapeEdemo",
     "portrait-cover":      "/cardportraitdemo",
     "portrait-frosted":    "/cardportraitcdemo",
     "portrait-typeset":    "/cardportraitedemo",
     "portrait-bookmark":   "/cardportraitfdemo",
     "portrait-dogear":     "/cardportraitgdemo",
+    "portrait-spine":      "/cardportraithdemo",
+    "portrait-spine-wide": "/cardportraitidemo",
 }
 
 

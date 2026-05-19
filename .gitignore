@@ -32,3 +32,6 @@ desktop.ini
 
 # Audit reports (generated, not source)
 audit-reports/
+
+# Design mockups (SVG explorations, not shipped)
+mockups/

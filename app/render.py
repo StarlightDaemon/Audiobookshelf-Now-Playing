@@ -1049,3 +1049,242 @@ def render_portrait_dogear_nothing(theme: Theme) -> str:
 
 def render_portrait_dogear_error(theme: Theme) -> str:
     return _pg_status_card(theme, "Unable to reach Audiobookshelf")
+
+
+# ── Landscape Minimal — inline strip (600×44) ─────────────────────────────────
+#
+#  ┌──────────────────────────────────────────────────────────────────────────┐
+#  │ CURRENTLY READING                                                         │
+#  │ Project Hail Mary · Andy Weir                                    ████░░  │
+#  └──────────────────────────────────────────────────────────────────────────┘
+
+_LMN_W = 600
+_LMN_H = 44
+_LMN_PAD = 12
+
+
+def _lmn_status_card(theme: Theme, message: str) -> str:
+    return (
+        f'<svg width="{_LMN_W}" height="{_LMN_H}" xmlns="http://www.w3.org/2000/svg">\n'
+        f'  {_bg(_LMN_W, _LMN_H, theme, rx=6)}\n'
+        f'  <text x="{_LMN_W // 2}" y="{_LMN_H // 2 + 4}" font-family="{_FONT}" font-size="10"'
+        f' fill="{theme.text_secondary}" text-anchor="middle">{_x(message)}</text>\n'
+        f'</svg>'
+    )
+
+
+def render_landscape_minimal(theme: Theme, data: CardData, label: str = "Currently Reading",
+                              corners: str = "rounded") -> str:
+    w, h    = _LMN_W, _LMN_H
+    pad     = _LMN_PAD
+    card_rx = 0 if corners == "square" else 6
+
+    title  = _x(_trunc(data.title,  36))
+    author = _x(_trunc(data.author, 22))
+
+    bar = _progress_bar(pad, h - 6, w - 2 * pad, data.progress, theme, bar_h=3, show_pct=False)
+
+    return (
+        f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg"'
+        f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
+        f'  {_bg(w, h, theme, rx=card_rx)}\n'
+        f'  <text x="{pad}" y="15" font-family="{_FONT}" font-size="8"'
+        f' fill="{theme.accent}" letter-spacing="1.5">{_x(label.upper())}</text>\n'
+        f'  <text x="{pad}" y="31" font-family="{_FONT}" xml:space="preserve">'
+        f'<tspan font-size="13" font-weight="600" fill="{theme.text_primary}">{title}</tspan>'
+        f'<tspan font-size="11" fill="{theme.text_secondary}"> · {author}</tspan>'
+        f'</text>\n'
+        f'  {bar}\n'
+        f'</svg>'
+    )
+
+
+def render_landscape_minimal_demo(theme: Theme, label: Optional[str] = None,
+                                   corners: str = "rounded") -> str:
+    return render_landscape_minimal(theme, _DEMO_DATA, corners=corners,
+                                    label=label or "Currently Reading")
+
+
+def render_landscape_minimal_nothing(theme: Theme) -> str:
+    return _lmn_status_card(theme, "No listening history yet")
+
+
+def render_landscape_minimal_error(theme: Theme) -> str:
+    return _lmn_status_card(theme, "Unable to reach Audiobookshelf")
+
+
+# ── Portrait Spine — book spine (56×360) ──────────────────────────────────────
+#
+#  ┌──────┐  ← accent-colour border frames the whole card
+#  │      │
+#  │  P   │
+#  │  r   │  title, 14px bold, rotated −90° (reads bottom → top)
+#  │  o   │
+#  │  j   │
+#  │      │  ← spacing only, no divider line
+#  │  A   │
+#  │  n   │  author, 11px
+#  │  d   │
+#  │  ░░░ │  ← progress bar (track + accent fill)
+#  └──────┘
+
+_PSP_W         = 56
+_PSP_H         = 360
+_PSP_RX        = 8
+_PSP_TITLE_CY  = 135   # center of title zone  y≈20 → y≈250 (230 px)
+_PSP_AUTHOR_CY = 308   # center of author zone y≈255 → y≈352 (97 px)
+
+
+def _psp_status_card(theme: Theme, message: str) -> str:
+    w, h = _PSP_W, _PSP_H
+    cx, cy = w // 2, h // 2
+    return (
+        f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg">\n'
+        f'  <rect width="{w}" height="{h}" rx="{_PSP_RX}"'
+        f' fill="{theme.background}" stroke="{theme.accent}" stroke-width="1.5"/>\n'
+        f'  <text x="0" y="0" transform="translate({cx},{cy}) rotate(-90)"'
+        f' font-family="{_FONT}" font-size="9" fill="{theme.text_secondary}"'
+        f' text-anchor="middle">{_x(message)}</text>\n'
+        f'</svg>'
+    )
+
+
+def render_portrait_spine(theme: Theme, data: CardData, label: str = "Currently Reading",
+                           corners: str = "rounded") -> str:
+    w, h    = _PSP_W, _PSP_H
+    card_rx = 0 if corners == "square" else _PSP_RX
+    cx      = w // 2   # 28
+
+    title  = _x(_trunc(data.title,  24))   # ~230 px ÷ 9.6 px/char at 14 px
+    author = _x(_trunc(data.author, 13))   # ~97 px ÷ 7.2 px/char at 12 px
+
+    clip_defs = (
+        f'<defs><clipPath id="spclip">'
+        f'<rect width="{w}" height="{h}" rx="{card_rx}"/>'
+        f'</clipPath></defs>\n'
+    )
+
+    bar = _progress_bar(0, h - 4, w, data.progress, theme, bar_h=4, show_pct=False)
+
+    return (
+        f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg"'
+        f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
+        f'  {clip_defs}'
+        f'  <rect width="{w}" height="{h}" rx="{card_rx}"'
+        f' fill="{theme.background}" stroke="{theme.accent}" stroke-width="1.5"/>\n'
+        f'  <text x="0" y="0" transform="translate({cx},{_PSP_TITLE_CY}) rotate(-90)"'
+        f' font-family="{_FONT}" font-size="14" font-weight="600"'
+        f' fill="{theme.text_primary}" text-anchor="middle">{title}</text>\n'
+        f'  <text x="0" y="0" transform="translate({cx},{_PSP_AUTHOR_CY}) rotate(-90)"'
+        f' font-family="{_FONT}" font-size="11"'
+        f' fill="{theme.text_secondary}" text-anchor="middle">{author}</text>\n'
+        f'  <g clip-path="url(#spclip)">{bar}</g>\n'
+        f'</svg>'
+    )
+
+
+def render_portrait_spine_demo(theme: Theme, label: Optional[str] = None,
+                                corners: str = "rounded") -> str:
+    return render_portrait_spine(theme, _DEMO_DATA, corners=corners,
+                                 label=label or "Currently Reading")
+
+
+def render_portrait_spine_nothing(theme: Theme) -> str:
+    return _psp_status_card(theme, "No listening history yet")
+
+
+def render_portrait_spine_error(theme: Theme) -> str:
+    return _psp_status_card(theme, "Unable to reach Audiobookshelf")
+
+
+# ── Portrait Spine Wide — full-colour spine (80×460) ──────────────────────────
+#
+#  ┌──────────┐
+#  │██████████│  ← entire card filled with theme.accent
+#  │          │
+#  │  Project │
+#  │  Hail    │  title, 18px bold, theme.background colour
+#  │  Mary    │
+#  │          │
+#  │          │
+#  │  Andy    │
+#  │  Weir    │  author, 13px bold, theme.background colour
+#  │          │
+#  │  ░░░░░░  │  ← semi-transparent progress strip
+#  └──────────┘
+
+_PSPW_W        = 80
+_PSPW_H        = 460
+_PSPW_RX       = 10
+_PSPW_TITLE_CY  = 155   # center of title zone  y≈20 → y≈290 (270 px)
+_PSPW_AUTHOR_CY = 382   # center of author zone y≈295 → y≈452 (157 px)
+
+
+def _pspw_status_card(theme: Theme, message: str) -> str:
+    w, h = _PSPW_W, _PSPW_H
+    cx, cy = w // 2, h // 2
+    return (
+        f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg">\n'
+        f'  <rect width="{w}" height="{h}" rx="{_PSPW_RX}"'
+        f' fill="{theme.accent}" stroke="{theme.border}" stroke-width="1"/>\n'
+        f'  <text x="0" y="0" transform="translate({cx},{cy}) rotate(-90)"'
+        f' font-family="{_FONT}" font-size="10" fill="{theme.background}" opacity="0.7"'
+        f' text-anchor="middle">{_x(message)}</text>\n'
+        f'</svg>'
+    )
+
+
+def render_portrait_spine_wide(theme: Theme, data: CardData, label: str = "Currently Reading",
+                                corners: str = "rounded") -> str:
+    w, h    = _PSPW_W, _PSPW_H
+    card_rx = 0 if corners == "square" else _PSPW_RX
+    cx      = w // 2   # 40
+
+    title  = _x(_trunc(data.title,  25))   # ~270 px ÷ 10.8 px/char at 18 px
+    author = _x(_trunc(data.author, 20))   # ~157 px ÷ 7.8 px/char at 13 px
+
+    clip_defs = (
+        f'<defs><clipPath id="spwclip">'
+        f'<rect width="{w}" height="{h}" rx="{card_rx}"/>'
+        f'</clipPath></defs>\n'
+    )
+
+    prog_strip = ""
+    if data.progress is not None:
+        fill_w = max(0, int(w * min(data.progress, 1.0)))
+        prog_strip = (
+            f'  <rect x="0" y="{h - 5}" width="{w}" height="5"'
+            f' fill="{theme.background}" opacity="0.2" clip-path="url(#spwclip)"/>\n'
+            f'  <rect x="0" y="{h - 5}" width="{fill_w}" height="5"'
+            f' fill="{theme.background}" opacity="0.65" clip-path="url(#spwclip)"/>\n'
+        )
+
+    return (
+        f'<svg width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg"'
+        f' xmlns:xlink="http://www.w3.org/1999/xlink">\n'
+        f'  {clip_defs}'
+        f'  <rect width="{w}" height="{h}" rx="{card_rx}"'
+        f' fill="{theme.accent}" stroke="{theme.border}" stroke-width="1"/>\n'
+        f'  <text x="0" y="0" transform="translate({cx},{_PSPW_TITLE_CY}) rotate(-90)"'
+        f' font-family="{_FONT}" font-size="18" font-weight="700"'
+        f' fill="{theme.background}" text-anchor="middle">{title}</text>\n'
+        f'  <text x="0" y="0" transform="translate({cx},{_PSPW_AUTHOR_CY}) rotate(-90)"'
+        f' font-family="{_FONT}" font-size="13" font-weight="600"'
+        f' fill="{theme.background}" opacity="0.75" text-anchor="middle">{author}</text>\n'
+        f'{prog_strip}'
+        f'</svg>'
+    )
+
+
+def render_portrait_spine_wide_demo(theme: Theme, label: Optional[str] = None,
+                                     corners: str = "rounded") -> str:
+    return render_portrait_spine_wide(theme, _DEMO_DATA, corners=corners,
+                                      label=label or "Currently Reading")
+
+
+def render_portrait_spine_wide_nothing(theme: Theme) -> str:
+    return _pspw_status_card(theme, "No listening history yet")
+
+
+def render_portrait_spine_wide_error(theme: Theme) -> str:
+    return _pspw_status_card(theme, "Unable to reach Audiobookshelf")

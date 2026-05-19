@@ -11,9 +11,10 @@ _CONFIG_PATH = os.environ.get(
 )
 
 VALID_LAYOUTS = {
-    "landscape-classic", "landscape-compact", "landscape-editorial",
+    "landscape-classic", "landscape-compact", "landscape-editorial", "landscape-minimal",
     "portrait-cover", "portrait-frosted",
     "portrait-typeset", "portrait-bookmark", "portrait-dogear",
+    "portrait-spine", "portrait-spine-wide",
 }
 VALID_THEMES = {"light", "github-dark", "parchment", "kraft"}
 VALID_CORNERS = {"rounded", "square"}

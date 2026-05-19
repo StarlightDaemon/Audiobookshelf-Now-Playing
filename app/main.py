@@ -8,18 +8,21 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from .abs import AbsClient, is_configured
 from .cache import TTLCache
-from .config import AppConfig, load_config, save_config
+from .config import AppConfig, load_config, save_config, VALID_CORNERS
 from .render import (
     CardData,
     render_landscape_classic, render_landscape_classic_demo, render_landscape_classic_standalone_demo,
     render_landscape_classic_error, render_landscape_classic_nothing,
     render_landscape_compact, render_landscape_compact_demo, render_landscape_compact_nothing, render_landscape_compact_error,
     render_landscape_editorial, render_landscape_editorial_demo, render_landscape_editorial_nothing, render_landscape_editorial_error,
+    render_landscape_minimal, render_landscape_minimal_demo, render_landscape_minimal_nothing, render_landscape_minimal_error,
     render_portrait_cover, render_portrait_cover_demo, render_portrait_cover_error, render_portrait_cover_nothing,
     render_portrait_frosted, render_portrait_frosted_demo, render_portrait_frosted_nothing, render_portrait_frosted_error,
     render_portrait_typeset, render_portrait_typeset_demo, render_portrait_typeset_nothing, render_portrait_typeset_error,
     render_portrait_bookmark, render_portrait_bookmark_demo, render_portrait_bookmark_nothing, render_portrait_bookmark_error,
     render_portrait_dogear, render_portrait_dogear_demo, render_portrait_dogear_nothing, render_portrait_dogear_error,
+    render_portrait_spine, render_portrait_spine_demo, render_portrait_spine_nothing, render_portrait_spine_error,
+    render_portrait_spine_wide, render_portrait_spine_wide_demo, render_portrait_spine_wide_nothing, render_portrait_spine_wide_error,
 )
 from .settings_ui import build_settings_page
 from .themes import DEFAULT_THEME, THEMES
@@ -187,6 +190,7 @@ async def card_portrait_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 async def card_landscape_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
                                        label: Optional[str] = Query(default=None),
                                        corners: str = Query(default="rounded")):
+    corners = corners if corners in VALID_CORNERS else "rounded"
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
     return Response(content=render_landscape_classic_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
@@ -210,6 +214,7 @@ async def card_landscape_c_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 async def card_landscape_c_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
                                          label: Optional[str] = Query(default=None),
                                          corners: str = Query(default="rounded")):
+    corners = corners if corners in VALID_CORNERS else "rounded"
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
     return Response(content=render_landscape_compact_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
@@ -226,6 +231,7 @@ async def card_landscape_d_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 async def card_landscape_d_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
                                          label: Optional[str] = Query(default=None),
                                          corners: str = Query(default="rounded")):
+    corners = corners if corners in VALID_CORNERS else "rounded"
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
     return Response(content=render_landscape_editorial_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
@@ -245,6 +251,7 @@ async def card_portrait_c_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 async def card_portrait_c_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
                                         label: Optional[str] = Query(default=None),
                                         corners: str = Query(default="rounded")):
+    corners = corners if corners in VALID_CORNERS else "rounded"
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
     return Response(content=render_portrait_frosted_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
@@ -262,6 +269,7 @@ async def card_portrait_e_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 async def card_portrait_e_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
                                         label: Optional[str] = Query(default=None),
                                         corners: str = Query(default="rounded")):
+    corners = corners if corners in VALID_CORNERS else "rounded"
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
     return Response(content=render_portrait_typeset_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
@@ -278,6 +286,7 @@ async def card_portrait_f_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 async def card_portrait_f_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
                                         label: Optional[str] = Query(default=None),
                                         corners: str = Query(default="rounded")):
+    corners = corners if corners in VALID_CORNERS else "rounded"
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
     return Response(content=render_portrait_bookmark_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
@@ -294,8 +303,60 @@ async def card_portrait_g_endpoint(theme: str = Query(default=DEFAULT_THEME)):
 async def card_portrait_g_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
                                         label: Optional[str] = Query(default=None),
                                         corners: str = Query(default="rounded")):
+    corners = corners if corners in VALID_CORNERS else "rounded"
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
     return Response(content=render_portrait_dogear_demo(t, label=label, corners=corners),
+                    media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
+
+
+@app.get("/cardlandscapee")
+async def card_landscape_e_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+    return await _serve_card(
+        render_landscape_minimal, render_landscape_minimal_demo,
+        render_landscape_minimal_nothing, render_landscape_minimal_error, theme,
+    )
+
+@app.get("/cardlandscapeEdemo")
+async def card_landscape_e_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
+                                         label: Optional[str] = Query(default=None),
+                                         corners: str = Query(default="rounded")):
+    corners = corners if corners in VALID_CORNERS else "rounded"
+    t = THEMES.get(theme, THEMES[DEFAULT_THEME])
+    return Response(content=render_landscape_minimal_demo(t, label=label, corners=corners),
+                    media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
+
+
+@app.get("/cardportraith")
+async def card_portrait_h_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+    return await _serve_card(
+        render_portrait_spine, render_portrait_spine_demo,
+        render_portrait_spine_nothing, render_portrait_spine_error, theme,
+    )
+
+@app.get("/cardportraithdemo")
+async def card_portrait_h_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
+                                        label: Optional[str] = Query(default=None),
+                                        corners: str = Query(default="rounded")):
+    corners = corners if corners in VALID_CORNERS else "rounded"
+    t = THEMES.get(theme, THEMES[DEFAULT_THEME])
+    return Response(content=render_portrait_spine_demo(t, label=label, corners=corners),
+                    media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
+
+
+@app.get("/cardportraiti")
+async def card_portrait_i_endpoint(theme: str = Query(default=DEFAULT_THEME)):
+    return await _serve_card(
+        render_portrait_spine_wide, render_portrait_spine_wide_demo,
+        render_portrait_spine_wide_nothing, render_portrait_spine_wide_error, theme,
+    )
+
+@app.get("/cardportraitidemo")
+async def card_portrait_i_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
+                                        label: Optional[str] = Query(default=None),
+                                        corners: str = Query(default="rounded")):
+    corners = corners if corners in VALID_CORNERS else "rounded"
+    t = THEMES.get(theme, THEMES[DEFAULT_THEME])
+    return Response(content=render_portrait_spine_wide_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
 
 
@@ -303,6 +364,7 @@ async def card_portrait_g_demo_endpoint(theme: str = Query(default=DEFAULT_THEME
 async def card_portrait_demo_endpoint(theme: str = Query(default=DEFAULT_THEME),
                                       label: Optional[str] = Query(default=None),
                                       corners: str = Query(default="rounded")):
+    corners = corners if corners in VALID_CORNERS else "rounded"
     t = THEMES.get(theme, THEMES[DEFAULT_THEME])
     return Response(content=render_portrait_cover_demo(t, label=label, corners=corners),
                     media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
@@ -338,11 +400,14 @@ _LAYOUT_MAP = {
     "landscape-classic":   (render_landscape_classic,   render_landscape_classic_demo,   render_landscape_classic_nothing,   render_landscape_classic_error),
     "landscape-compact":   (render_landscape_compact,   render_landscape_compact_demo,   render_landscape_compact_nothing,   render_landscape_compact_error),
     "landscape-editorial": (render_landscape_editorial, render_landscape_editorial_demo, render_landscape_editorial_nothing, render_landscape_editorial_error),
+    "landscape-minimal":   (render_landscape_minimal,   render_landscape_minimal_demo,   render_landscape_minimal_nothing,   render_landscape_minimal_error),
     "portrait-cover":      (render_portrait_cover,      render_portrait_cover_demo,      render_portrait_cover_nothing,      render_portrait_cover_error),
     "portrait-frosted":    (render_portrait_frosted,    render_portrait_frosted_demo,    render_portrait_frosted_nothing,    render_portrait_frosted_error),
     "portrait-typeset":    (render_portrait_typeset,    render_portrait_typeset_demo,    render_portrait_typeset_nothing,    render_portrait_typeset_error),
     "portrait-bookmark":   (render_portrait_bookmark,   render_portrait_bookmark_demo,   render_portrait_bookmark_nothing,   render_portrait_bookmark_error),
     "portrait-dogear":     (render_portrait_dogear,     render_portrait_dogear_demo,     render_portrait_dogear_nothing,     render_portrait_dogear_error),
+    "portrait-spine":      (render_portrait_spine,      render_portrait_spine_demo,      render_portrait_spine_nothing,      render_portrait_spine_error),
+    "portrait-spine-wide": (render_portrait_spine_wide, render_portrait_spine_wide_demo, render_portrait_spine_wide_nothing, render_portrait_spine_wide_error),
 }
 
 
@@ -366,7 +431,7 @@ async def post_config(request: Request):
     theme = body.get("theme", "github-dark")
     label = body.get("label", "Currently Reading")
     corners = body.get("corners", "rounded")
-    from .config import VALID_LAYOUTS, VALID_THEMES, VALID_CORNERS
+    from .config import VALID_LAYOUTS, VALID_THEMES
     if layout not in VALID_LAYOUTS:
         return JSONResponse({"error": f"Unknown layout: {layout}"}, status_code=400)
     if theme not in VALID_THEMES:
