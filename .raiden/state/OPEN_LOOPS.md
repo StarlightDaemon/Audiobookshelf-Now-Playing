@@ -1,5 +1,11 @@
 # Open Loops
 
+## LOOP-0020 — OPERATING_RULES.md baseline discrepancy (CLOSED)
+
+Investigated 2026-06-07 during WSL→macOS migration audit (Edict v0.6.1).
+Baseline hash discrepancy was NOT present in this repo — hashes match exactly.
+No corrective action needed. Loop closed.
+
 ## OL-002 — Deployment: pending operator actions (ongoing)
 
 The following are blocked on operator, not agent tasks:
