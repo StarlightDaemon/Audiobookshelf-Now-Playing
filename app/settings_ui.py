@@ -1,3 +1,5 @@
+import json
+
 from .config import AppConfig
 from .fujin_tokens import load_dark_tokens
 
@@ -424,7 +426,7 @@ def build_settings_page(config: AppConfig, base_url: str = "") -> str:
 
     let currentLayout  = "{config.layout}";
     let currentTheme   = "{config.theme}";
-    let currentLabel   = "{config.label}";
+    let currentLabel   = {json.dumps(config.label)};
     let currentCorners = "{config.corners}";
     let labelDebounce  = null;
 

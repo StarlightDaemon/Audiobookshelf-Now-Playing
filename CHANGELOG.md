@@ -7,6 +7,29 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.2.0] — 2026-06-16
+
+### Added
+
+- Settings UI (`/settings`) with live card preview, layout/theme/corners/label selectors, and save-to-disk via `/api/config`
+- Multi-layout support: 11 card layouts across landscape and portrait families
+- Fujin token integration — settings UI theming driven by design token JSON
+- `app/config.py` — persistent config read/write with validation
+- `app/settings_ui.py` — HTML settings page builder with Fujin-token CSS vars
+- `app/fujin_tokens.py` — Fujin token loader with fallback defaults
+- `fujin-tokens-resolved.json` — resolved design token file
+- `tests/smoke.py` — basic smoke tests
+- `deploy/motd.sh` — MOTD script for LXC container
+- `deploy/update.sh` — in-place update script for LXC container
+
+### Fixed
+
+- Python 3.11 compatibility: removed backslash inside f-string expression in `render.py` (SyntaxError on Python < 3.12); replaced inline conditional with hoisted `_muted_attrs` variable
+- Deployment: `CONFIG_PATH` default moved from `/etc/audiobookshelf-now-playing-config.json` (read-only under systemd `ProtectSystem`) to `/opt/audiobookshelf-now-playing/config.json` (covered by `ReadWritePaths`)
+- Security: `config.label` is now serialized with `json.dumps()` before interpolation into the settings JS template, preventing stored XSS via a crafted label value
+
+---
+
 ## [0.1.0] — 2026-05-15
 
 ### Added

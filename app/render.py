@@ -184,13 +184,15 @@ def render_landscape_classic(theme: Theme, data: CardData, label: str = "Current
     meta_line_h = 30
     # Vertically center the meta block around the card midpoint (y=80)
     meta_start  = 80 - ((len(meta_lines) - 1) * meta_line_h) // 2
-    meta_els = "".join(
-        f'  <text x="{_LS_META_X}" y="{meta_start + i * meta_line_h}"'
-        f' font-family="{_FONT}" font-size="11" fill="{theme.text_secondary}"'
-        f'{" opacity=\"0.45\" font-style=\"italic\"" if muted else ""}>'
-        f'{line}</text>\n'
-        for i, (line, muted) in enumerate(meta_lines)
-    )
+    meta_els = ""
+    for i, (line, muted) in enumerate(meta_lines):
+        _muted_attrs = ' opacity="0.45" font-style="italic"' if muted else ""
+        meta_els += (
+            f'  <text x="{_LS_META_X}" y="{meta_start + i * meta_line_h}"'
+            f' font-family="{_FONT}" font-size="11" fill="{theme.text_secondary}"'
+            f'{_muted_attrs}>'
+            f'{line}</text>\n'
+        )
 
     sep = (
         f'  <line x1="{_LS_SEP_X}" y1="20" x2="{_LS_SEP_X}" y2="140"'

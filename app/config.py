@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 _CONFIG_PATH = os.environ.get(
     "CONFIG_PATH",
-    "/etc/audiobookshelf-now-playing-config.json",
+    "/opt/audiobookshelf-now-playing/config.json",
 )
 
 VALID_LAYOUTS = {
