@@ -7,6 +7,35 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- `SESSION_MAX_AGE` env var (default 3600s): sessions older than this are
+  treated as stale and no longer shown as "currently reading"
+- Test suite: smoke tests now cover all 11 layouts (was 8) with XML
+  well-formedness checks; mocked `httpx` tests for `abs.py`; `TestClient`
+  integration tests for `/card`, `/settings`, `/api/config`; cache and
+  config round-trip tests — 88 tests total
+- CI: GitHub Actions workflow running the full suite on a Python
+  3.11 / 3.12 matrix
+
+### Changed
+
+- `requirements.txt` pinned to exact versions (`fastapi==0.139.0`,
+  `uvicorn[standard]==0.51.0`, `httpx==0.28.1`), verified against the full
+  test suite on both supported Python versions
+- README updated to reflect v0.2.0 (multi-layout, settings UI, current env
+  vars and endpoints — previously still described the v0.1.0 feature set)
+
+### Removed
+
+- Dead code in `render.py`: a stale commented-out `_progress_bar()` block
+  describing a design superseded by the live implementation, an unused
+  local variable, and an unused test helper in `tests/smoke.py`
+
+---
+
 ## [0.2.0] — 2026-06-16
 
 ### Added
