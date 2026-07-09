@@ -27,6 +27,9 @@ build/
 Thumbs.db
 desktop.ini
 
+# Serena MCP local project state — not repo content
+.serena/
+
 # Logs
 *.log
 
