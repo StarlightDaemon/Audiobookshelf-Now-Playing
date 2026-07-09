@@ -35,3 +35,7 @@ audit-reports/
 
 # Design mockups (SVG explorations, not shipped)
 mockups/
+
+# RAIDEN audit outputs — operational findings, not framework content
+.raiden/state/AUDIT_LOG.md
+.raiden/state/last-audit.md
