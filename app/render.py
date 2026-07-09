@@ -5,27 +5,6 @@ from .themes import Theme
 
 _FONT = "'Fira Code', 'Courier New', monospace"
 
-# ── Progress bar (disabled — saved for future live-progress widget) ───────────
-# Restore _BAR_W and _progress_bar() when re-enabling, and add progress: float
-# back to CardData. The bar rendered below the series/author line.
-#
-# _BAR_W = _TEXT_RIGHT - _TEXT_X - 40
-#
-# def _progress_bar(bar_top: int, progress: float, theme: Theme) -> str:
-#     fill_w = max(0, int(_BAR_W * progress))
-#     pct = f"{int(progress * 100)}%"
-#     pct_x = _TEXT_X + _BAR_W + 6
-#     bar_y = bar_top + 6
-#     return (
-#         f'<rect x="{_TEXT_X}" y="{bar_top}" width="{_BAR_W}" height="6"'
-#         f' rx="3" fill="{theme.border}"/>'
-#         f'<rect x="{_TEXT_X}" y="{bar_top}" width="{fill_w}" height="6"'
-#         f' rx="3" fill="{theme.accent}"/>'
-#         f'<text x="{pct_x}" y="{bar_y}" font-family="{_FONT}" font-size="11"'
-#         f' fill="{theme.text_secondary}" dominant-baseline="auto">{pct}</text>'
-#     )
-# ─────────────────────────────────────────────────────────────────────────────
-
 
 @dataclass
 class CardData:
@@ -976,7 +955,6 @@ def render_portrait_dogear(theme: Theme, data: CardData, label: str = "Currently
     cov_x, cov_y = pad, pad
 
     txt_x   = cov_x + cov_sz + 10    # 106
-    txt_w   = w - txt_x - pad        # 98 — chars ≈ 11 at 9px, 9 at 12px
 
     title_lines = _word_wrap(data.title, 10)[:2]
 
