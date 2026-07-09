@@ -18,6 +18,9 @@ No further agent action required.
 
 ## OL-003 — Cloudflare Access gating /settings and /api/config (OPEN)
 
+- Status: OPEN
+- Gate: operator
+
 The settings and config API endpoints must be protected before the service is exposed on
 `card.starlightdaemon.dev`. This is an operator action:
 
@@ -28,6 +31,9 @@ The settings and config API endpoints must be protected before the service is ex
 No agent action available until the LXC is provisioned and the tunnel is live.
 
 ## OL-004 — Post-deployment backlog (OPEN, not blocking)
+
+- Status: OPEN
+- Gate: none
 
 Not blocking live deployment. Track individually as separate loops if prioritised:
 
