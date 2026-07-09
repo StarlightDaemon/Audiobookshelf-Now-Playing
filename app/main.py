@@ -33,6 +33,9 @@ logger = logging.getLogger(__name__)
 SESSION_TTL = int(os.environ.get("SESSION_TTL", "300"))
 # How long to cache metadata + cover art per book (expensive; only re-fetched on book change)
 CARD_TTL = int(os.environ.get("CARD_TTL", "300"))
+# How old (seconds) the most recent listening session may be before it's treated
+# as stale and no longer shown as "currently reading". 0 disables the filter.
+SESSION_MAX_AGE = int(os.environ.get("SESSION_MAX_AGE", "3600"))
 
 _session_cache: TTLCache   # short — current session info
 _card_cache: TTLCache      # long — metadata + cover keyed by item_id
@@ -71,7 +74,7 @@ async def _fetch_card_data() -> Optional[CardData]:
     # ── Session (short cache) ─────────────────────────────────────────────────
     session = _session_cache.get("session")
     if session is None:
-        session = await _abs.get_current_session()
+        session = await _abs.get_current_session(max_age_seconds=SESSION_MAX_AGE)
         _session_cache.set("session", session if session is not None else False)
     elif session is False:
         session = None

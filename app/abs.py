@@ -1,5 +1,6 @@
 import base64
 import os
+import time
 from typing import Optional
 
 import httpx
@@ -23,8 +24,17 @@ class AbsClient:
     async def aclose(self) -> None:
         await self._client.aclose()
 
-    async def get_current_session(self) -> Optional[dict]:
-        """Return the most recent book listening session, or None if none exist."""
+    async def get_current_session(self, max_age_seconds: Optional[int] = None) -> Optional[dict]:
+        """
+        Return the most recent book listening session, or None if none exist.
+
+        The ABS session endpoint returns the last-synced session regardless of how
+        long ago it ended, so a book finished weeks ago would otherwise render as
+        "currently reading" forever. When max_age_seconds is set (>0), a session
+        whose updatedAt is older than that threshold is treated as stale and
+        None is returned instead. Sessions without an updatedAt field are never
+        filtered, since staleness can't be determined for them.
+        """
         resp = await self._client.get(
             f"{self._host}/api/me/listening-sessions",
             headers=self._headers,
@@ -36,7 +46,17 @@ class AbsClient:
         sessions = resp.json().get("sessions", [])
         # Filter to audiobooks only (exclude podcasts)
         book_sessions = [s for s in sessions if s.get("mediaType") == "book"]
-        return book_sessions[0] if book_sessions else None
+        if not book_sessions:
+            return None
+
+        session = book_sessions[0]
+        if max_age_seconds is not None and max_age_seconds > 0:
+            updated_at = session.get("updatedAt")
+            if updated_at is not None:
+                age_seconds = time.time() - (updated_at / 1000)
+                if age_seconds > max_age_seconds:
+                    return None
+        return session
 
     async def get_item(self, item_id: str) -> dict:
         resp = await self._client.get(
