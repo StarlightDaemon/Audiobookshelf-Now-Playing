@@ -16,13 +16,19 @@ Operator infrastructure steps remain outstanding.
 - `app/themes.py` — Theme definitions
 - `app/fujin_tokens.py` — Fujin design token loader with fallback defaults
 - `fujin-tokens-resolved.json` — Resolved design token file
-- `tests/smoke.py` — Basic smoke tests
+- `tests/smoke.py` — SVG renderer smoke tests, all 11 layouts × 4 themes, with XML well-formedness checks
+- `tests/test_abs.py` — Mocked `httpx` tests for the ABS client
+- `tests/test_cache.py`, `tests/test_config.py` — Cache TTL and config round-trip tests
+- `tests/test_main.py` — `TestClient` integration tests for `/card`, `/settings`, `/api/config`
+- `pytest.ini`, `requirements-dev.txt` — Test config and dev/test dependency set
+- `.github/workflows/ci.yml` — CI, Python 3.11/3.12 matrix
 - `deploy/ct/audiobookshelf-now-playing.sh` — Proxmox host LXC creation script
 - `deploy/install/audiobookshelf-now-playing-install.sh` — Container install script
 - `deploy/motd.sh` — MOTD script for LXC container
 - `deploy/update.sh` — In-place update script for LXC container
 - `deploy/audiobookshelf-now-playing.service` — systemd unit
 - `requirements.txt`, `.env.example`, `README.md`, `LICENSE`, `VERSION`, `CHANGELOG.md`, `.gitignore`
+- `ABS_CARD_AUDIT_2026-06-15.md` — Pre-deployment audit report
 - Remote: https://github.com/StarlightDaemon/Audiobookshelf-Now-Playing
 
 ## Deployment blockers resolved (as of v0.2.0)
@@ -40,7 +46,9 @@ Operator infrastructure steps remain outstanding.
 
 ## Post-deployment backlog (not blocking)
 
-See OL-004.
+OL-004 closed — session recency filter, expanded test suite, CI matrix,
+pinned dependencies, README/CHANGELOG drift, and dead code removal all
+landed.
 
 ## ABS API note
 

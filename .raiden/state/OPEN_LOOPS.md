@@ -30,25 +30,21 @@ The settings and config API endpoints must be protected before the service is ex
 
 No agent action available until the LXC is provisioned and the tunnel is live.
 
-## OL-004 — Post-deployment backlog (OPEN, not blocking)
+## OL-004 — Post-deployment backlog (Closed 2026-07-09)
 
-- Status: OPEN
-- Gate: none
+- Status: Closed (2026-07-09) — all six backlog items landed with the full test suite green.
 
-Not blocking live deployment. Track individually as separate loops if prioritised:
+Resolved:
 
-- Session recency filter: filter out sessions older than a configurable threshold so stale
-  "last played" entries don't appear as "currently reading."
-- Dependency pinning: `requirements.txt` is currently unpinned; pin to exact versions after
-  a successful integration test run.
-- Test expansion:
-  - 3 missing layout smoke tests (portrait-bookmark, portrait-dogear, portrait-spine-wide)
-  - XML-parse assertions on rendered SVG output
-  - Mocked httpx integration tests for `abs.py`
-  - TestClient integration tests for `/card`, `/settings`, `/api/config`
-  - Cache and config round-trip tests
-- CI Python 3.11 matrix: add `python-version: ["3.11", "3.12"]` to GitHub Actions workflow
-  to verify the f-string fix is exercised in CI.
-- doc/CHANGELOG drift cleanup: README still references v0.1.0 feature set; update to v0.2.0.
-- Dead code removal: audit for any render helpers or theme paths no longer reachable from
-  `main.py` after the multi-layout refactor.
+- Session recency filter: `SESSION_MAX_AGE` env var (default 3600s) filters sessions whose
+  `updatedAt` exceeds the threshold out of `AbsClient.get_current_session()`.
+- Test expansion: smoke tests now cover all 11 layouts (was 8) with XML-parse
+  well-formedness checks; mocked `httpx` tests for `abs.py`; `TestClient` integration tests
+  for `/card`, `/settings`, `/api/config`; cache and config round-trip tests — 88 tests total.
+- CI: `.github/workflows/ci.yml` added with a `python-version: ["3.11", "3.12"]` matrix.
+- Dependency pinning: `requirements.txt` pinned to exact versions after the full suite was
+  verified green on both 3.11 and 3.12.
+- doc/CHANGELOG drift: README rewritten from the v0.1.0 feature set to v0.2.0 reality;
+  CHANGELOG got an Unreleased entry for this pass.
+- Dead code removal: stale commented-out `_progress_bar()` block and an unused local in
+  `render.py`, plus an uncalled test helper in `tests/smoke.py`.
