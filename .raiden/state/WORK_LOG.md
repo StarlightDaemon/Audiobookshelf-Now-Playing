@@ -1,5 +1,29 @@
 # Work Log
 
+## 2026-07-09 — OL-004 post-deployment backlog closed
+
+- All six OL-004 items landed across 11 commits (`2f00e72`..`8e72bc2`), each commit green
+  against the suite:
+  - Session recency filter: `SESSION_MAX_AGE` env var (default 3600s) in `main.py`, filter
+    on session `updatedAt` in `AbsClient.get_current_session()`; documented in
+    `.env.example` and README.
+  - Test expansion: smoke tests grown from 8 to all 11 layouts with XML well-formedness
+    checks; mocked `httpx` tests for `abs.py`; cache TTL and config round-trip tests;
+    `TestClient` integration tests for `/card`, `/settings`, `/api/config`. Suite grew
+    32 → 88 tests; `pytest.ini` and `requirements-dev.txt` added.
+  - CI: `.github/workflows/ci.yml` added, `python-version: ["3.11", "3.12"]` matrix
+    (none existed before).
+  - Dependency pinning: `requirements.txt` pinned to `fastapi==0.139.0`,
+    `uvicorn[standard]==0.51.0`, `httpx==0.28.1` after the full 88-test suite passed
+    against them from clean installs on both 3.11.15 and 3.12.13.
+  - doc drift: README rewritten from the v0.1.0 feature set to v0.2.0 reality (endpoints,
+    env vars, settings UI, testing section); CHANGELOG Unreleased entry added.
+  - Dead code: stale commented-out `_progress_bar()` block and unused `txt_w` local
+    removed from `render.py`; uncalled `_check()` helper removed from `tests/smoke.py`.
+- Chore alongside: `ABS_CARD_AUDIT_2026-06-15.md` committed in place (no docs/audit home;
+  `audit-reports/` is gitignored generated output); `.serena/` added to `.gitignore`.
+- OL-004 marked Closed (2026-07-09) in `OPEN_LOOPS.md`. OL-003 untouched (operator-gated).
+
 ## 2026-07-09 — Edict v2.0.0 + state normalization
 
 - Applied RAIDEN Edict update 1.0.1 → 2.0.0 via `raiden_updater.cli` (plan → apply → re-plan

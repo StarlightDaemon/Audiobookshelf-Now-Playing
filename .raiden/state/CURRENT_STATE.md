@@ -44,11 +44,9 @@ Operator infrastructure steps remain outstanding.
 3. Configure Cloudflare Tunnel: `card.starlightdaemon.dev` → LXC:8000
 4. Gate `/settings` and `/api/config` behind Cloudflare Access (operator action; not automated)
 
-## Post-deployment backlog (not blocking)
+## Post-deployment backlog
 
-OL-004 closed — session recency filter, expanded test suite, CI matrix,
-pinned dependencies, README/CHANGELOG drift, and dead code removal all
-landed.
+See OL-004.
 
 ## ABS API note
 
