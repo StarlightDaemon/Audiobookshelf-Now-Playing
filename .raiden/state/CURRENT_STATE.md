@@ -40,21 +40,8 @@ Operator infrastructure steps remain outstanding.
 
 ## Post-deployment backlog (not blocking)
 
-- Session recency filter (OL-003)
-- Dependency pinning (requirements.txt currently unpinned)
-- Test expansion: 3 missing layout smoke tests, XML-parse assertions, mocked httpx for `abs.py`, TestClient integration, cache/config round-trip tests
-- CI Python 3.11 matrix (verify fix is exercised in CI)
-- doc/CHANGELOG drift cleanup
-- Dead code removal audit
+See OL-004.
 
 ## ABS API note
 
 The session endpoint returns `currentTime` and `duration` from the last sync — not a live position. This is acceptable for v1.
-
-## Migration note (2026-06-07)
-
-WSL→macOS migration remediation complete (Edict v0.6.1 audit):
-- Hook permissions corrected (commit-msg, pre-commit: 666 → 755)
-- pre-commit hook updated to use python3.12 explicitly (macOS system python3 = 3.9)
-- Path references updated: /mnt/e/ → /Users/dante/Citadel/ (AGENTS.md, fujin-css-handoff.md)
-- LOOP-0020 baseline discrepancy investigated — NOT present in this repo, hashes match

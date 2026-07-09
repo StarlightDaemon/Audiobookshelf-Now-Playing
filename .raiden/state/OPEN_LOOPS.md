@@ -2,7 +2,7 @@
 
 ## LOOP-0020 — OPERATING_RULES.md baseline discrepancy (CLOSED)
 
-Investigated 2026-06-07 during WSL→macOS migration audit (Edict v0.6.1).
+Investigated 2026-06-07 during WSL→macOS migration audit.
 Baseline hash discrepancy was NOT present in this repo — hashes match exactly.
 No corrective action needed. Loop closed.
 
