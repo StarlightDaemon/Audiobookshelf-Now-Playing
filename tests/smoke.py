@@ -8,6 +8,7 @@ Runnable as:
 
 import sys
 import os
+import xml.etree.ElementTree as ET
 
 # Allow running from repo root without installing the package
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -16,41 +17,32 @@ from app.render import (
     render_landscape_classic_demo,
     render_landscape_compact_demo,
     render_landscape_editorial_demo,
+    render_landscape_minimal_demo,
     render_portrait_cover_demo,
     render_portrait_frosted_demo,
     render_portrait_typeset_demo,
     render_portrait_bookmark_demo,
     render_portrait_dogear_demo,
+    render_portrait_spine_demo,
+    render_portrait_spine_wide_demo,
 )
 from app.themes import THEMES
 
+# One entry per layout in app.config.VALID_LAYOUTS — every layout gets a
+# smoke test across every theme.
 RENDERERS = [
     ("render_landscape_classic_demo",   render_landscape_classic_demo),
     ("render_landscape_compact_demo",   render_landscape_compact_demo),
     ("render_landscape_editorial_demo", render_landscape_editorial_demo),
+    ("render_landscape_minimal_demo",   render_landscape_minimal_demo),
     ("render_portrait_cover_demo",      render_portrait_cover_demo),
     ("render_portrait_frosted_demo",    render_portrait_frosted_demo),
     ("render_portrait_typeset_demo",    render_portrait_typeset_demo),
     ("render_portrait_bookmark_demo",   render_portrait_bookmark_demo),
     ("render_portrait_dogear_demo",     render_portrait_dogear_demo),
+    ("render_portrait_spine_demo",      render_portrait_spine_demo),
+    ("render_portrait_spine_wide_demo", render_portrait_spine_wide_demo),
 ]
-
-
-def _check(renderer_name: str, theme_name: str, theme) -> tuple[bool, str]:
-    """Return (passed, message) for a single renderer × theme combo."""
-    try:
-        result = renderer_name  # just to avoid shadowing
-        svg = RENDERERS[[n for n, _ in RENDERERS].index(renderer_name)][1](theme)
-    except Exception as exc:
-        return False, f"EXCEPTION: {exc}"
-
-    if not isinstance(svg, str):
-        return False, f"result is {type(svg).__name__}, not str"
-    if not svg.startswith("<svg"):
-        return False, f"does not start with <svg (got {svg[:30]!r})"
-    if not svg.endswith("</svg>"):
-        return False, f"does not end with </svg> (got ...{svg[-30:]!r})"
-    return True, "ok"
 
 
 # ── pytest-compatible test functions ─────────────────────────────────────────
@@ -70,6 +62,12 @@ def _make_test(renderer_name, fn, theme_name, theme):
         assert svg.endswith("</svg>"), (
             f"{renderer_name}({theme_name}): does not end with </svg>"
         )
+        try:
+            ET.fromstring(svg)
+        except ET.ParseError as exc:
+            raise AssertionError(
+                f"{renderer_name}({theme_name}): not well-formed XML: {exc}"
+            ) from exc
     test_fn.__name__ = f"test_{renderer_name}_{theme_name}"
     return test_fn
 
@@ -108,6 +106,11 @@ def _run_standalone() -> int:
                 ok, reason = False, f"does not start with <svg (got {svg[:30]!r})"
             elif not svg.endswith("</svg>"):
                 ok, reason = False, f"does not end with </svg> (got ...{svg[-30:]!r})"
+            else:
+                try:
+                    ET.fromstring(svg)
+                except ET.ParseError as exc:
+                    ok, reason = False, f"not well-formed XML: {exc}"
 
             if ok:
                 print(f"PASS  {label}")
