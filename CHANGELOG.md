@@ -11,6 +11,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Cloudflare Access enforcement on `/settings` and `/api/config`: when
+  `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` are set, the app verifies the
+  signed `Cf-Access-Jwt-Assertion` header (signature via the team's JWKS,
+  plus audience/issuer/expiry) and fails closed — `401` on a missing token,
+  `403` on an invalid one. Unset preserves current behaviour with a startup
+  warning. `/card` and `/health` stay public. (`app/cf_access.py`; adds the
+  `PyJWT[crypto]` dependency; 19 new tests)
 - `SESSION_MAX_AGE` env var (default 3600s): sessions older than this are
   treated as stale and no longer shown as "currently reading"
 - Test suite: smoke tests now cover all 11 layouts (was 8) with XML
@@ -23,8 +30,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 
 - `requirements.txt` pinned to exact versions (`fastapi==0.139.0`,
-  `uvicorn[standard]==0.51.0`, `httpx==0.28.1`), verified against the full
-  test suite on both supported Python versions
+  `uvicorn[standard]==0.51.0`, `httpx==0.28.1`, `PyJWT[crypto]==2.13.0`,
+  `cryptography==49.0.0`), verified against the full test suite on both
+  supported Python versions
 - README updated to reflect v0.2.0 (multi-layout, settings UI, current env
   vars and endpoints — previously still described the v0.1.0 feature set)
 

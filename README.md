@@ -43,10 +43,12 @@ and card label, an embeddable URL, and a "Save & apply" button that persists
 your choice as the default served by `/card`. Saved config is written to
 `CONFIG_PATH` (see [Environment variables](#environment-variables)).
 
-`/settings` and `/api/config` are currently **unauthenticated**. If this
-service is reachable from the public internet, put them behind Cloudflare
-Access or similar before exposing them — `/card` and `/health` are safe to
-expose without gating.
+`/settings` and `/api/config` write configuration, so they can be gated behind
+[Cloudflare Access](#cloudflare-access-for-settings--apiconfig). When
+`CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` are set the app verifies Cloudflare's
+signed `Cf-Access-Jwt-Assertion` header on those two paths and rejects
+unauthenticated requests; `/card` and `/health` always stay public. With the
+vars unset (local/dev) they remain open and the app logs a startup warning.
 
 ---
 
@@ -138,6 +140,50 @@ Add a new public hostname in your Cloudflare Tunnel configuration:
 | `PORT` | `8000` | uvicorn listen port |
 | `CONFIG_PATH` | `/opt/audiobookshelf-now-playing/config.json` | Where saved settings (layout, theme, label, corners) are persisted |
 | `FUJIN_TOKENS` | *(unset — falls back to built-in defaults)* | Path to a resolved Fujin design-token JSON file used to theme `/settings` |
+| `CF_ACCESS_TEAM_DOMAIN` | *(unset — enforcement off)* | Cloudflare Access team domain (bare name, `*.cloudflareaccess.com` host, or full URL). With `CF_ACCESS_AUD`, gates `/settings` + `/api/config` |
+| `CF_ACCESS_AUD` | *(unset — enforcement off)* | Application Audience (AUD) tag of the Access application covering `/settings` and `/api/*` |
+
+---
+
+## Cloudflare Access for `/settings` + `/api/config`
+
+`/card` and `/health` are safe to expose publicly, but `/settings` and
+`/api/config` read and write configuration and should be restricted once the
+service is on the public internet. The app enforces this itself as defence in
+depth: when `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` are both set, every
+request to those two paths must carry a valid `Cf-Access-Jwt-Assertion` header
+(the signed token Cloudflare Access injects). The app validates the token's
+signature against your team's published signing keys — fetched from
+`https://<team-domain>/cdn-cgi/access/certs` and cached — along with its
+audience, issuer, and expiry, and returns `401` (missing) or `403` (invalid)
+otherwise. With the vars unset, enforcement is off and a startup warning is
+logged so local/dev use keeps working.
+
+### Operator: create the Access application in the Cloudflare dashboard
+
+App-side enforcement only takes effect once a matching Access application exists.
+In the [Cloudflare Zero Trust dashboard](https://one.dash.cloudflare.com/):
+
+1. **Access → Applications → Add an application → Self-hosted.**
+2. Add two **Application domains** on `card.starlightdaemon.dev`, both
+   restricted to `/settings` and `/api/*` — leave the bare hostname and `/card`
+   **out** so the card stays public:
+   - `card.starlightdaemon.dev` path `/settings`
+   - `card.starlightdaemon.dev` path `/api/*`
+3. Attach a **policy** allowing only the intended identities (e.g. an Allow rule
+   scoped to your email or your Access group).
+4. Save, then open the application's **Overview** and copy its **Application
+   Audience (AUD) tag**.
+5. On the LXC, set both vars in `/etc/audiobookshelf-now-playing.env`:
+   ```env
+   CF_ACCESS_TEAM_DOMAIN=<your-team>.cloudflareaccess.com
+   CF_ACCESS_AUD=<the-AUD-tag-from-step-4>
+   ```
+   then `systemctl restart audiobookshelf-now-playing`.
+
+After the restart, unauthenticated hits to `/settings` or `/api/config` are
+rejected both at Cloudflare's edge and by the app itself, while `/card` stays
+open.
 
 ---
 

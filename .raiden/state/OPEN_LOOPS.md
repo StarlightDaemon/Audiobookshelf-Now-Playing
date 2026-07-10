@@ -16,19 +16,26 @@ Resolved in v0.2.0 commit `fix: resolve deployment blockers and settings XSS; bu
 
 No further agent action required.
 
-## OL-003 — Cloudflare Access gating /settings and /api/config (OPEN)
+## OL-003 — Cloudflare Access gating /settings and /api/config
 
-- Status: OPEN
-- Gate: operator
+- Status: Implemented app-side, pending Cloudflare dashboard policy (2026-07-09)
+- Gate: operator (dashboard)
 
-The settings and config API endpoints must be protected before the service is exposed on
-`card.starlightdaemon.dev`. This is an operator action:
+App-side enforcement is done: `/settings` and `/api/config` verify the
+`Cf-Access-Jwt-Assertion` header (signature via the team JWKS, plus
+audience/issuer/expiry) and fail closed — 401 missing, 403 invalid — when
+`CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` are set; unset preserves current
+behaviour with a startup warning. `/card` and `/health` stay public. See
+`app/cf_access.py` and the WORK_LOG entry.
 
-1. Create a Cloudflare Access application scoping `card.starlightdaemon.dev/settings` and
-   `card.starlightdaemon.dev/api/*` to authenticated users only.
-2. The `/card` and `/health` endpoints remain public.
+Remaining (operator, in the Cloudflare dashboard — cannot be automated here):
 
-No agent action available until the LXC is provisioned and the tunnel is live.
+1. Create a Cloudflare Access (self-hosted) application scoping
+   `card.starlightdaemon.dev/settings` and `card.starlightdaemon.dev/api/*` to
+   authenticated identities only; leave `/card` public.
+2. Copy the application's AUD tag and set `CF_ACCESS_TEAM_DOMAIN` +
+   `CF_ACCESS_AUD` in `/etc/audiobookshelf-now-playing.env`, then restart the
+   service. Full step-by-step in the README "Cloudflare Access" section.
 
 ## OL-004 — Post-deployment backlog (Closed 2026-07-09)
 

@@ -1,5 +1,38 @@
 # Work Log
 
+## 2026-07-09 — OL-003 Cloudflare Access gating implemented app-side
+
+- Operator approved gating `/settings` and `/api/config`. Implemented app-side
+  enforcement as defence in depth (the Cloudflare edge policy is still the
+  operator's dashboard step).
+- `app/cf_access.py` — new module. `require_cf_access` FastAPI dependency reads
+  `CF_ACCESS_TEAM_DOMAIN` + `CF_ACCESS_AUD` at call time; when both set it
+  verifies the `Cf-Access-Jwt-Assertion` header via `PyJWT` against the team
+  JWKS (`https://<team>/cdn-cgi/access/certs`, cached with `PyJWKClient`),
+  checking RS256 signature, audience, issuer, and expiry. Fails closed: 401 on
+  a missing header, 403 on any invalid token. When either var is unset the gate
+  is a no-op (passthrough) and `main.py`'s lifespan logs a startup warning —
+  same optional-env posture as `SESSION_MAX_AGE`, so local/dev use is unchanged.
+- `app/main.py` — added `dependencies=[Depends(require_cf_access)]` to the three
+  routes (`GET /settings`, `GET /api/config`, `POST /api/config`); `/card`,
+  `/health`, `/status`, and all card variants stay public. Added the
+  enforcement-off startup warning.
+- Dependency: `requirements.txt` gains `PyJWT[crypto]==2.13.0` +
+  `cryptography==49.0.0` (pinned); verified with a clean install on 3.12.
+- `tests/test_cf_access.py` — 19 tests. Real RSA keypair, tokens signed with
+  PyJWT, JWKS client stubbed to the matching public key so `jwt.decode` runs
+  genuine verification: allow (all three routes), deny (missing→401;
+  invalid-signature / expired / wrong-aud / wrong-issuer / malformed→403),
+  unset-env passthrough, public endpoints open under enforcement, plus unit
+  coverage of `_normalize_team_domain` and `is_access_enforced`. Suite 88 → 107,
+  green.
+- Docs: README gains a "Cloudflare Access" section (behaviour + operator
+  dashboard steps) and two env-var table rows; the old "unauthenticated" note
+  rewritten. `.env.example` documents both vars. CHANGELOG Unreleased entry.
+- OL-003 moved from OPEN to "Implemented app-side, pending Cloudflare dashboard
+  policy (2026-07-09) — Gate: operator (dashboard)" in `OPEN_LOOPS.md`;
+  `CURRENT_STATE.md` snapshot updated (new module, test file, operator action).
+
 ## 2026-07-09 — OL-004 post-deployment backlog closed
 
 - All six OL-004 items landed across 11 commits (`2f00e72`..`8e72bc2`), each commit green
