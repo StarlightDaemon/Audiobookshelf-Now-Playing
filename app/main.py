@@ -3,10 +3,11 @@ import os
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI, Query, Request
+from fastapi import Depends, FastAPI, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from .abs import AbsClient, is_configured
+from .cf_access import is_access_enforced, require_cf_access
 from .cache import TTLCache
 from .config import AppConfig, load_config, save_config, VALID_CORNERS
 from .render import (
@@ -55,6 +56,12 @@ async def lifespan(app: FastAPI):
             "ABS credentials not configured — serving demo card. "
             "Set ABS_HOST and ABS_TOKEN in /etc/audiobookshelf-now-playing.env "
             "then restart the service."
+        )
+    if not is_access_enforced():
+        logger.warning(
+            "Cloudflare Access enforcement is OFF — /settings and /api/config are "
+            "UNAUTHENTICATED. Set CF_ACCESS_TEAM_DOMAIN and CF_ACCESS_AUD to gate "
+            "them before exposing this service to the public internet."
         )
     yield
     if _abs is not None:
@@ -414,20 +421,20 @@ _LAYOUT_MAP = {
 }
 
 
-@app.get("/settings", response_class=HTMLResponse)
+@app.get("/settings", response_class=HTMLResponse, dependencies=[Depends(require_cf_access)])
 async def settings_page(request: Request):
     cfg = load_config()
     base = str(request.base_url).rstrip("/")
     return HTMLResponse(content=build_settings_page(cfg, base_url=base))
 
 
-@app.get("/api/config")
+@app.get("/api/config", dependencies=[Depends(require_cf_access)])
 async def get_config():
     cfg = load_config()
     return {"layout": cfg.layout, "theme": cfg.theme, "label": cfg.label, "corners": cfg.corners}
 
 
-@app.post("/api/config")
+@app.post("/api/config", dependencies=[Depends(require_cf_access)])
 async def post_config(request: Request):
     body = await request.json()
     layout = body.get("layout", "landscape-classic")
