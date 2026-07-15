@@ -1,4 +1,4 @@
-You are the ABS Now Playing Instance agent, operating inside /Users/dante/Citadel/audiobookshelf-now-playing.
+You are the ABS Now Playing Instance agent, operating inside E:\Citadel/audiobookshelf-now-playing.
 
 Read first:
 - AGENTS.md
@@ -27,7 +27,7 @@ Core files:
 
 ## Fujin relationship
 
-Fujin (`/Users/dante/Citadel/Fujin`) is a Mantine v7 React component library. This project consumes its
+Fujin (`E:\Citadel/Fujin`) is a Mantine v7 React component library. This project consumes its
 **visual language only** — not its components. There is no npm dependency and no React.
 
 ### Hard boundary — never cross this
@@ -76,7 +76,7 @@ CSS vars are no longer hardcoded. `settings_ui.py` calls `load_dark_tokens()` fr
 (a committed copy of Fujin's export) and maps `--fujin-*` vars to local CSS var names.
 
 **Update process when Fujin tokens change:**
-1. In `/Users/dante/Citadel/Fujin`: `npm run export-tokens` → writes `dist/tokens-resolved.json`
+1. In `E:\Citadel/Fujin`: `npm run export-tokens` → writes `dist/tokens-resolved.json`
 2. Copy that file to `app/fujin-tokens-resolved.json` in this repo
 3. Commit and restart (no code change needed — the JSON is read at request time)
 

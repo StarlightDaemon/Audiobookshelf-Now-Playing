@@ -84,7 +84,7 @@
 
 - Hook permissions corrected (commit-msg, pre-commit: 666 → 755)
 - pre-commit hook updated to use python3.12 explicitly (macOS system python3 = 3.9)
-- Path references updated: /mnt/e/ → /Users/dante/Citadel/ (AGENTS.md, fujin-css-handoff.md)
+- Path references updated: /mnt/e/ → E:\Citadel/ (AGENTS.md, fujin-css-handoff.md)
 - LOOP-0020 baseline discrepancy investigated — NOT present in this repo, hashes match
 
 ## 2026-05-17 — Fujin CSS alignment: settings page theming
