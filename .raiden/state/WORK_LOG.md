@@ -35,7 +35,7 @@
 
 ## 2026-07-09 — OL-004 post-deployment backlog closed
 
-- All six OL-004 items landed across 11 commits (`2f00e72`..`8e72bc2`), each commit green
+- All six OL-004 items landed across 11 commits (`af9cce5`..`c04f771`), each commit green
   against the suite:
   - Session recency filter: `SESSION_MAX_AGE` env var (default 3600s) in `main.py`, filter
     on session `updatedAt` in `AbsClient.get_current_session()`; documented in
