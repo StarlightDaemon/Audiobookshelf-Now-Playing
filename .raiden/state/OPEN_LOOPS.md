@@ -1,12 +1,19 @@
 # Open Loops
 
-## LOOP-0020 — OPERATING_RULES.md baseline discrepancy (CLOSED)
+<!-- Statuses: open · deferred · held: <who> · no-action · accepted · closed. Each active item: ID, status, gate owner, next step or restart condition, evidence. IDs never change or get reused. Entries below stay in their original order. -->
+
+## Active
+
+- **OL-003 · held: owner · gate: owner (Cloudflare dashboard)** · Cloudflare Access application over `/settings` and `/api/*`. The app-side check is done; the owner creates the Access application and sets `CF_ACCESS_TEAM_DOMAIN` + `CF_ACCESS_AUD` on the server. Details in the OL-003 entry below.
+- Nothing else is open. LOOP-0020, OL-002 and OL-004 are closed.
+
+## LOOP-0020 — OPERATING_RULES.md baseline discrepancy (closed)
 
 Investigated 2026-06-07 during WSL→macOS migration audit.
 Baseline hash discrepancy was NOT present in this repo — hashes match exactly.
 No corrective action needed. Loop closed.
 
-## OL-002 — Deployment blocker: CONFIG_PATH and render.py SyntaxError (CLOSED)
+## OL-002 — Deployment blocker: CONFIG_PATH and render.py SyntaxError (closed)
 
 Resolved in v0.2.0 commit `fix: resolve deployment blockers and settings XSS; bump to v0.2.0`.
 
@@ -18,8 +25,8 @@ No further agent action required.
 
 ## OL-003 — Cloudflare Access gating /settings and /api/config
 
-- Status: Implemented app-side, pending Cloudflare dashboard policy (2026-07-09)
-- Gate: operator (dashboard)
+- Status: held: owner — implemented app-side, pending the Cloudflare dashboard policy (2026-07-09)
+- Gate: owner (Cloudflare dashboard)
 
 App-side enforcement is done: `/settings` and `/api/config` verify the
 `Cf-Access-Jwt-Assertion` header (signature via the team JWKS, plus
@@ -37,9 +44,9 @@ Remaining (operator, in the Cloudflare dashboard — cannot be automated here):
    `CF_ACCESS_AUD` in `/etc/audiobookshelf-now-playing.env`, then restart the
    service. Full step-by-step in the README "Cloudflare Access" section.
 
-## OL-004 — Post-deployment backlog (Closed 2026-07-09)
+## OL-004 — Post-deployment backlog (closed 2026-07-09)
 
-- Status: Closed (2026-07-09) — all six backlog items landed with the full test suite green.
+- Status: closed (2026-07-09) — all six backlog items landed with the full test suite green.
 
 Resolved:
 
