@@ -25,7 +25,7 @@ CI (`.github/workflows/ci.yml`) runs the test suite on every push and pull reque
 
 - Main branch is `main`. Agent work goes on `<agent>/<task>` branches in their own worktrees.
 - No `Co-Authored-By` or other agent attribution lines in commits; the `commit-msg` hook enforces this. Never bypass it.
-- Ask the owner before pushing, tagging or releasing.
+- See Standing delegation v1 in AGENTS.md.
 - Never commit secrets: real values belong in the server's environment file, never in the repo. Only `.env.example` (variable names, no values) is tracked.
 - `/card` and `/health` stay public; `/settings` and `/api/config` write configuration and must stay behind the Cloudflare Access check when it's configured.
 - Fujin only supplies CSS tokens for the settings page; it never touches the SVG cards (D-001, D-002).
@@ -48,3 +48,34 @@ Update `CURRENT_STATE.md` and `OPEN_LOOPS.md` when you finish or pause work. Kee
 One agent per worktree. Before starting, read the Claims section of `../../HANDOFF.md` (the workspace folder two levels above the repo or worktree root, outside Git, so every worktree sees the same file) and `git worktree list`, then add your claim line there; mark it done when you finish. Separate tasks may run in parallel only when both claims are listed there and they don't touch the same files. The owner (or the agent they assign) merges branches and updates `.raiden/state/`. Releases, deployments, the hook and Git config are one-at-a-time work.
 
 This repository is public: don't commit personal names, absolute local paths or details of the owner's private tooling.
+
+## Standing delegation v1 (operator: StarlightDaemon)
+Applies to every agent working in this repo: Claude Code, Codex, Gemini CLI.
+
+Do without asking, then report once at the end of the task:
+- Read, build, test, lint. Wait for CI yourself; don't hand back "pending".
+- Create agent branches (claude/*, codex/*, gemini/*); commit, rebase,
+  fast-forward and merge them. Create agent worktrees.
+- Push agent branches (never force). Open and update PRs; enable auto-fix.
+- Merge a PR into the default branch when all checks pass, no review
+  requests changes, and the merge doesn't publish (see Publication surface).
+- Delete agent branches, local and remote, once their commits are in the
+  default branch or another pushed branch.
+- Keep records current: HANDOFF, OPEN-LOOPS, CHANGELOG and any doc that
+  describes branch or PR state.
+
+Ask once, in one message listing everything pending:
+- Tags, releases, leaving a -dev version, or any merge that publishes.
+- Force push, or rewriting history that's already pushed.
+- Any other deletion: worktrees, backup refs, files or branches an agent
+  didn't create, commits that exist nowhere else.
+- Committing, moving or discarding StarlightDaemon's uncommitted work.
+- CI workflows, branch protection, repo settings, secrets, agent permission
+  settings, and this section.
+- Anything against live hosts, services or devices.
+
+Stop and report: failing checks you can't fix within the task, conflicts in
+files StarlightDaemon is editing, or anything this section doesn't cover.
+
+### Publication surface
+Merging to `main` publishes: new installs run the install script from raw `main` (`deploy/ct/`), which clones `main`, and `deploy/update.sh` resets a server to `origin/HEAD` on its next update. Every merge to `main` is gated.
