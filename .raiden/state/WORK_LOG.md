@@ -1,5 +1,22 @@
 # Work Log
 
+## 2026-11-24 — Warnings, deprecations and advisory sweep
+
+- Sweep of the repo with the suite on the pinned versions, then on the latest
+  versions with warnings as errors, plus `ruff`, `bash -n` on `deploy/*.sh`,
+  `osv-scanner` and `gitleaks` (no leaks). Local Python 3.14; CI covers 3.11/3.12.
+- Test warning: Starlette's `TestClient` deprecates `httpx` in favour of
+  `httpx2`. Added `httpx2` to `requirements-dev.txt` (test-only). With it the suite
+  is warning-free, including on the latest FastAPI/Starlette/anyio.
+- Advisories: pinned `PyJWT` 2.14.0 had two advisories (CVSS 8.2 and 5.3), fixed
+  in 2.15.0. Bumped to 2.15.1 and `cryptography` to 50.0.2. `osv-scanner` still
+  lists `anyio`, `certifi` and `idna`; those are unpinned transitive packages and a fresh install resolves them to fixed versions.
+- Lint: `typing.Dict` alias and bare `raise` in `except` in `app/cf_access.py`
+  fixed. Left as-is (intended): the placeholder token string in `app/abs.py`, the
+  silent fall-through in `app/fujin_tokens.py`, `assert` in tests, and parsing our
+  own SVG output with `xml.etree` in tests.
+- Verified in a fresh venv from the new requirements: 107 passed with `-W error`.
+
 ## 2026-07-09 — OL-003 Cloudflare Access gating implemented app-side
 
 - Operator approved gating `/settings` and `/api/config`. Implemented app-side

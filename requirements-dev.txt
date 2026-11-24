@@ -1,2 +1,5 @@
 -r requirements.txt
 pytest
+# Starlette's TestClient now wants httpx2 (httpx is deprecated for it).
+# Test-only; the app itself still uses httpx (see requirements.txt).
+httpx2

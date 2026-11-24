@@ -35,6 +35,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   supported Python versions
 - README updated to reflect v0.2.0 (multi-layout, settings UI, current env
   vars and endpoints — previously still described the v0.1.0 feature set)
+- `PyJWT[crypto]` 2.14.0 → 2.15.1 (two published advisories fixed in 2.15.0;
+  PyJWT verifies the Cloudflare Access token) and `cryptography` 50.0.1 →
+  50.0.2
+- Test-only: `httpx2` added to `requirements-dev.txt` so Starlette's
+  `TestClient` stops emitting its `httpx` deprecation warning; the app still
+  uses `httpx`
+- `app/cf_access.py`: dropped the deprecated `typing.Dict` alias and made the
+  403 raises explicit (`from None`); behaviour unchanged
 
 ### Removed
 

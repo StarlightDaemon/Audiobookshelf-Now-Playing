@@ -30,7 +30,6 @@ Fail-closed semantics when enforcement is active:
 
 import logging
 import os
-from typing import Dict
 
 import jwt
 from fastapi import HTTPException, Request
@@ -69,7 +68,7 @@ def is_access_enforced() -> bool:
 
 # One cached JWKS client per certs URL. PyJWKClient fetches the team's public
 # signing keys lazily on first use and caches them, so we never fetch per request.
-_jwk_clients: Dict[str, "jwt.PyJWKClient"] = {}
+_jwk_clients: dict[str, "jwt.PyJWKClient"] = {}
 
 
 def _get_jwk_client(certs_url: str) -> "jwt.PyJWKClient":
@@ -108,8 +107,8 @@ async def require_cf_access(request: Request) -> None:
             issuer=issuer,
         )
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=403, detail="Cloudflare Access token invalid")
+        raise HTTPException(status_code=403, detail="Cloudflare Access token invalid") from None
     except Exception:
         # JWKS unreachable, malformed key material, etc. — fail closed.
         logger.exception("Cloudflare Access token verification failed")
-        raise HTTPException(status_code=403, detail="Cloudflare Access verification unavailable")
+        raise HTTPException(status_code=403, detail="Cloudflare Access verification unavailable") from None
