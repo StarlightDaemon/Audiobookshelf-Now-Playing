@@ -29,7 +29,7 @@ CI (`.github/workflows/ci.yml`) runs the test suite on every push and pull reque
 - Never commit secrets: real values belong in the server's environment file, never in the repo. Only `.env.example` (variable names, no values) is tracked.
 - `/card` and `/health` stay public; `/settings` and `/api/config` write configuration and must stay behind the Cloudflare Access check when it's configured.
 - Fujin only supplies CSS tokens for the settings page; it never touches the SVG cards (D-001, D-002).
-- Local audit reports in `.audits/` are untracked and not yet gitignored: don't commit them. `audit-reports/` and `.raiden/state/AUDIT_LOG.md` are gitignored.
+- Local audit reports (`.audits/`, `audit-reports/`, `.raiden/state/AUDIT_LOG.md`) are gitignored; never commit them.
 - Don't edit `.raiden/writ/` or `.raiden/instance/`. They're historical RAIDEN v2 text kept for the old tooling. Where they, `.raiden/README.md` or `.raiden/local/` disagree with this file, this file wins.
 
 ## Project records
